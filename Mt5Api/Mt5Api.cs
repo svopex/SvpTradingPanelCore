@@ -20,7 +20,7 @@ namespace Mt5Api
 	{
 		private readonly MtApi5Client apiClient = new MtApi5Client();
 
-		public static ISvpMt Instance { get; set; }
+		public static ISvpMt? Instance { get; set; }
 
 		private bool Connected { get; set; }
 
@@ -508,7 +508,7 @@ namespace Mt5Api
 			}
 		}
 
-		public string Symbol
+		public string? Symbol
 		{
 			get
 			{
@@ -523,7 +523,7 @@ namespace Mt5Api
 				symbol = value;
 			}
 		}
-		private string symbol;
+		private string? symbol;
 
 		public ulong CreateMarketOrderSlPtPercent(double units, double slPercent, double ptPercent)
 		{
@@ -675,7 +675,14 @@ namespace Mt5Api
 		public bool ClosePendingOrder(long orderId)
 		{
 			// return apiClient.OrderClose((ulong)orderId);
-			return true;
+
+			const int TRADE_RETCODE_DONE = 10009;
+			MqlTradeRequest request;
+			request = new MqlTradeRequest();
+			request.Action = ENUM_TRADE_REQUEST_ACTIONS.TRADE_ACTION_REMOVE;
+			request.Order = (ulong)orderId;
+			bool sent  = apiClient.OrderSend(request, out MqlTradeResult? result);
+			return sent && result?.Retcode == TRADE_RETCODE_DONE;
 		}
 
 		public int SymbolsTotal(bool symbolsInMarketWatch)
@@ -789,7 +796,7 @@ namespace Mt5Api
 			return apiClient.PositionsTotal() > 0;
 		}
 
-		public (string, double)? GetLatestProfit(string instrument = null)
+		public (string?, double) GetLatestProfit(string? instrument = null)
 		{
 			apiClient.HistorySelect(apiClient.TimeCurrent().AddDays(-7), apiClient.TimeCurrent());
 			int TotalDeals = apiClient.HistoryDealsTotal();
@@ -801,7 +808,7 @@ namespace Mt5Api
 				ENUM_DEAL_ENTRY dealEntry = (ENUM_DEAL_ENTRY)apiClient.HistoryDealGetInteger(ticket, ENUM_DEAL_PROPERTY_INTEGER.DEAL_ENTRY);
 				if ((dealType == ENUM_DEAL_TYPE.DEAL_TYPE_BUY || dealType == ENUM_DEAL_TYPE.DEAL_TYPE_SELL) && dealEntry == ENUM_DEAL_ENTRY.DEAL_ENTRY_OUT)
 				{
-					string symbol = apiClient.HistoryDealGetString(ticket, ENUM_DEAL_PROPERTY_STRING.DEAL_SYMBOL);
+					string? symbol = apiClient.HistoryDealGetString(ticket, ENUM_DEAL_PROPERTY_STRING.DEAL_SYMBOL);
 					if (String.IsNullOrWhiteSpace(instrument) || (instrument == symbol))
 					{
 						DateTime dateTime = ConvertMscTimeToDateTime(apiClient.HistoryDealGetInteger(ticket, ENUM_DEAL_PROPERTY_INTEGER.DEAL_TIME_MSC));
@@ -811,7 +818,7 @@ namespace Mt5Api
 				}
 			}
 			//histories.Sort((x, y) => { return x.dt.CompareTo(y.dt); });
-			return null;
+			return (null, 0);
 		}
 
 		public List<History> GetLatestProfitHistory(DateTime from, DateTime to)
@@ -828,10 +835,10 @@ namespace Mt5Api
 				if ((dealType == ENUM_DEAL_TYPE.DEAL_TYPE_BUY || dealType == ENUM_DEAL_TYPE.DEAL_TYPE_SELL) && dealEntry == ENUM_DEAL_ENTRY.DEAL_ENTRY_IN)
 				{
 					double volume = apiClient.HistoryDealGetDouble(ticket, ENUM_DEAL_PROPERTY_DOUBLE.DEAL_VOLUME);
-					string comment = apiClient.HistoryDealGetString(ticket, ENUM_DEAL_PROPERTY_STRING.DEAL_COMMENT);
+					string? comment = apiClient.HistoryDealGetString(ticket, ENUM_DEAL_PROPERTY_STRING.DEAL_COMMENT);
 					dealHistories.Add(new DealHistory()
 					{
-						 Comment = comment,
+						 Comment = comment!,
 						 Volume = volume,
 					});
 				}
@@ -844,13 +851,13 @@ namespace Mt5Api
 					double volume = apiClient.HistoryDealGetDouble(ticket, ENUM_DEAL_PROPERTY_DOUBLE.DEAL_VOLUME);
 					
 					var dealHistory = dealHistories.FirstOrDefault(x => x.Volume == volume);
-					string comment = (dealHistory == null) ? null : dealHistory.Comment;
+					string? comment = (dealHistory == null) ? null : dealHistory.Comment;
 					if (dealHistory != null)
 					{
 						dealHistories.Remove(dealHistory);
 					}
 					
-					histories.Add(new History() { dt = dateTime, profit = profit, commission = commission, swap = swap, comment = comment });
+					histories.Add(new History() { dt = dateTime, profit = profit, commission = commission, swap = swap, comment = comment! });
 				}
 			}
 			//histories.Sort((x, y) => { return x.dt.CompareTo(y.dt); });

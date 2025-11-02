@@ -8,9 +8,9 @@ namespace Mt5Api
 {
 	public interface ISvpMt
 	{
-		string Symbol { get; set; }
+		string? Symbol { get; set; }
 		double ContractSize(string? symbol = null);
-		string SymbolName(string symbolname);
+		string? SymbolName(string symbolname);
 		string AccountCurrency();
 		double AccountEquity();
 		double SymbolPoint();
@@ -47,7 +47,7 @@ namespace Mt5Api
 		double GetActualAskPrice();
 		ulong CreateMarketOrderSlPt(double units, double Sl, double Pt);
 		bool IsOpenPosition();
-		(string, double)? GetLatestProfit(string? instrument = null);
+		(string?, double) GetLatestProfit(string? instrument = null);
 		List<History> GetLatestProfitHistory(DateTime from, DateTime to);
 
 		// Scalping WTRS

@@ -22,7 +22,7 @@ namespace SvpTradingPanel
 	{
 		private const int SlToBeAutomationProgressIncrementConstant = 20;
 		private bool SlToBeAutomation { get; set; }
-		private Orders SlToBeAutomationOrders { get; set; }
+		private Orders SlToBeAutomationOrders { get; set; } = new Orders();
 
 		private enum SlTypeEnum
 		{
@@ -40,31 +40,34 @@ namespace SvpTradingPanel
 
 		private void RefreshLabelSlLoss()
 		{
-			string currency = MetatraderInstance.Instance?.AccountCurrency();
-			if (currency != null)
+			if (MetatraderInstance.Instance != null)
 			{
-				// labelSlLoss.Text = "Full SL loss: " + Math.Round(RiskValue() * GetTrackBarPositionUsingPercent() / 100, 2) + " " + currency;
-
-				double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
-				double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
-				bool result;
-				double slPtDistance;
-				(result, slPtDistance) = GetSlPtDistance(true);
-				if (result)
+				string currency = MetatraderInstance.Instance.AccountCurrency();
+				if (currency != null)
 				{
-					if (IsForex(MetatraderInstance.Instance.Symbol))
+					// labelSlLoss.Text = "Full SL loss: " + Math.Round(RiskValue() * GetTrackBarPositionUsingPercent() / 100, 2) + " " + currency;
+
+					double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
+					double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
+					bool result;
+					double slPtDistance;
+					(result, slPtDistance) = GetSlPtDistance(true);
+					if (result)
 					{
-						labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv, 2) + " " + currency;
+						if (IsForex(MetatraderInstance.Instance.Symbol))
+						{
+							labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv, 2) + " " + currency;
+						}
+						else
+						{
+							double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
+							labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv * course, 2) + " " + currency;
+						}
 					}
 					else
 					{
-						double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
-						labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv * course, 2) + " " + currency;
+						labelSlLoss.Text = "Full SL loss: 0 " + currency;
 					}
-				}
-				else
-				{
-					labelSlLoss.Text = "Full SL loss: 0 " + currency;
 				}
 			}
 		}
@@ -166,7 +169,7 @@ namespace SvpTradingPanel
 			return (result, positionSize);
 		}
 
-		bool IsForex(string symbol)
+		bool IsForex(string? symbol)
 		{
 			if (string.IsNullOrWhiteSpace(symbol))
 				return false;
@@ -777,7 +780,7 @@ namespace SvpTradingPanel
 		//}
 
 		// Add these fields to your FormTradingPanel class:
-		private System.Windows.Forms.Timer timerLabelConnected;
+		private System.Windows.Forms.Timer? timerLabelConnected;
 		private int labelConnectedPos = 0;
 		private int labelConnectedDir = 1;
 		private const int labelConnectedMax = 12; // Adjust for the width you want
@@ -802,13 +805,12 @@ namespace SvpTradingPanel
 			{
 				// Stop animation and show static disconnected state
 				timerLabelConnected?.Stop();
-				timerLabelConnected = null;
 				labelConnected.Text = "[-----------]";
 				labelConnected.ForeColor = Color.Red;
 			}
 		}
 
-		private void TimerLabelConnected_Tick(object sender, EventArgs e)
+		private void TimerLabelConnected_Tick(object? sender, EventArgs e)
 		{
 			// Build the string with spaces and one asterisk
 			labelConnected.Text = "[" + new string(' ', labelConnectedPos) + "-" + new string(' ', labelConnectedMax - labelConnectedPos) + "]";
@@ -996,12 +998,12 @@ namespace SvpTradingPanel
 
 						if (slToBeAutomationOrdersByInstrument.Count() > ordersByInstrument.Count())
 						{
-							(string instrument, double profit)? result = MetatraderInstance.Instance.GetLatestProfit(instrument);
-							if (result != null)
+							(string? instrument, double profit) result = MetatraderInstance.Instance.GetLatestProfit(instrument);
+							if (instrument != null)
 							{
 								if (checkBoxBlink.Checked)
 								{
-									CallHue(result.Value.profit >= 0);
+									CallHue(result.profit >= 0);
 								}
 							}
 
@@ -1163,7 +1165,7 @@ namespace SvpTradingPanel
 			*/
 		}
 
-		private void trackBarPositionUsing_ValueChanged(object sender, EventArgs e)
+		private void trackBarPositionUsing_ValueChanged(object? sender, EventArgs? e)
 		{
 			labelPositionUsingPercent.Text = GetTrackBarPositionUsingPercent().ToString() + " %";
 			RefreshLabelSlLoss();

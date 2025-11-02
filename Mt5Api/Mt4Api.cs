@@ -590,19 +590,19 @@ namespace Mt4Api
 			return false;
 		}
 
-		public (string, double)? GetLatestProfit(string instrument = null)
+		public (string?, double) GetLatestProfit(string? instrument = null)
 		{
 			int ordersHistoryTotal = apiClient.OrdersHistoryTotal();
 			List<History> histories = new List<History>();
 			for (int i = ordersHistoryTotal - 1; i >= 0; i--)
 			{
-				var order = apiClient.GetOrder(i, OrderSelectMode.SELECT_BY_POS, OrderSelectSource.MODE_HISTORY);
-				if ((order.Operation == TradeOperation.OP_BUY || order.Operation == TradeOperation.OP_SELL) && ((instrument == order.Symbol) || String.IsNullOrWhiteSpace(instrument)))
+				MtOrder? order = apiClient.GetOrder(i, OrderSelectMode.SELECT_BY_POS, OrderSelectSource.MODE_HISTORY);
+				if ((order?.Operation == TradeOperation.OP_BUY || order?.Operation == TradeOperation.OP_SELL) && ((instrument == order.Symbol) || String.IsNullOrWhiteSpace(instrument)))
 				{
 					return (order.Symbol, order.Profit);
 				}
 			}
-			return null;
+			return (null, 0);
 		}
 
 		public List<History> GetLatestProfitHistory(DateTime from, DateTime to)
