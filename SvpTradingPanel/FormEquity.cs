@@ -39,6 +39,22 @@ namespace SvpTradingPanel
 			}
 		}
 
+		private double RoundUpToNiceStep(double value)
+		{
+			double exponent = Math.Floor(Math.Log10(value));
+			double baseStep = Math.Pow(10, exponent);
+
+			// Pokud je value výrazně větší než baseStep, posuň na další vyšší základ
+			if (value > baseStep * 5)
+				baseStep *= 10;
+			else if (value > baseStep * 2)
+				baseStep *= 5;
+			else if (value > baseStep)
+				baseStep *= 2;
+
+			return baseStep;
+		}
+
 		private void RefreshData()
 		{
 			List<History> results = MetatraderInstance.Instance.GetLatestProfitHistory(new DateTime(GetYear(), 1, 1, 0, 0, 0), new DateTime(GetYear(), 12, 31, 23, 59, 59));
@@ -86,22 +102,13 @@ namespace SvpTradingPanel
 			var series1 = new LineSeries { Title = "Equity", Color = OxyColors.Green, StrokeThickness = 2 };
 			var series2 = new LineSeries { Title = "Equity with commission and swap", Color = OxyColors.Red, StrokeThickness = 2 };
 
-			// Přidej osu Y s menším krokem pro popisky
-			plotModel.Axes.Add(new LinearAxis
-			{
-				Position = AxisPosition.Left,
-				MajorStep = 1000, // nastav podle potřeby (např. 100, 500, 1000)
-				MinorStep = 200,  // volitelné, pro menší čárky
-				StringFormat = "F0", // formátování popisků
-				MajorGridlineStyle = LineStyle.Solid,
-				MinorGridlineStyle = LineStyle.Dot
-			});
-
 			double profit = 0;
 			double income = 0;
 			double spending = 0;
 			double commission = 0;
 			double swap = 0;
+			double minProfit = int.MaxValue;
+			double maxProfit = int.MinValue;
 			for (int i = 0; i < results.Count(); i++)
 			{
 				if (results[i].profit >= 0)
@@ -114,9 +121,12 @@ namespace SvpTradingPanel
 				{
 					spending += results[i].profit;
 					commission += results[i].commission;
-					swap += results[i].swap;
+					swap += results[i].swap;					
 				}
 				profit += results[i].profit;
+
+				minProfit = Math.Min(minProfit, profit);
+				maxProfit = Math.Max(maxProfit, profit);
 
 				// series1.Points.AddXY(i + 1, profit);
 				// series2.Points.AddXY(i + 1, profit + commission + swap);
@@ -124,6 +134,24 @@ namespace SvpTradingPanel
 				series2.Points.Add(new DataPoint(i + 1, profit + commission + swap));
 
 			}
+			int desiredTicks = 20; // požadovaný počet hlavních čárek
+
+			double rawStep = (maxProfit - minProfit) / (desiredTicks - 1);
+			double majorStep = RoundUpToNiceStep(rawStep);
+
+			// Přidej osu Y s menším krokem pro popisky
+			plotModel.Axes.Add(new LinearAxis
+			{
+				Position = AxisPosition.Left,
+				MajorStep = majorStep, // nastav podle potřeby (např. 100, 500, 1000)
+				MinorStep = majorStep / 2,  // volitelné, pro menší čárky
+				StringFormat = "F0", // formátování popisků
+				MajorGridlineStyle = LineStyle.Solid,
+				MinorGridlineStyle = LineStyle.Dot,
+				Minimum = minProfit - majorStep,
+				Maximum = maxProfit + majorStep,
+			});
+
 			plotModel.Series.Add(series1);
 			plotModel.Series.Add(series2);
 			plotView.Model = plotModel;
