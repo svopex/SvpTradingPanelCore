@@ -1,6 +1,0 @@
-!!! MtApi5.ExecutionException: Response from MetaTrader is null
-   at MtApi5.MtApi5Client.SendCommand[T](MtRpcClient client, Int32 expertHandle, Mt5CommandType commandType, Object payload) in D:\Zaloha\Trading\Zdrojaky\mtapicore\MtApi5\MtApi5Client.cs:line 3588
-   at MtApi5.MtApi5Client.SendCommand[T](Int32 expertHandle, Mt5CommandType commandType, Object payload) in D:\Zaloha\Trading\Zdrojaky\mtapicore\MtApi5\MtApi5Client.cs:line 3567
-   at MtApi5.MtApi5Client.SymbolsTotal(Boolean selected) in D:\Zaloha\Trading\Zdrojaky\mtapicore\MtApi5\MtApi5Client.cs:line 1510
-   at Mt5Api.Mt5Api.SymbolName(String symbolname) in D:\Zaloha\Trading\Zdrojaky\SvpTradingPanelCore\Mt5Api\Mt5Api.cs:line 82
-   at SvpTradingPanel.FormTradingPanel.timerRefreshLabels_Tick(Object sender, EventArgs e) in D:\Zaloha\Trading\Zdrojaky\SvpTradingPanelCore\SvpTradingPanel\FormTradingPanel.cs:line 1103
