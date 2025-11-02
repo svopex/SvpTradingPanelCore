@@ -102,6 +102,9 @@ namespace SvpTradingPanel
 			var series1 = new LineSeries { Title = "Equity", Color = OxyColors.Green, StrokeThickness = 2 };
 			var series2 = new LineSeries { Title = "Equity with commission and swap", Color = OxyColors.Red, StrokeThickness = 2 };
 
+			series1.Points.Add(new DataPoint(0, 0));
+			series2.Points.Add(new DataPoint(0, 0));
+
 			double profit = 0;
 			double income = 0;
 			double spending = 0;
@@ -127,12 +130,14 @@ namespace SvpTradingPanel
 
 				minProfit = Math.Min(minProfit, profit);
 				maxProfit = Math.Max(maxProfit, profit);
+				minProfit = Math.Min(minProfit, profit + commission + swap);
+				maxProfit = Math.Max(maxProfit, profit + commission + swap);
+
 
 				// series1.Points.AddXY(i + 1, profit);
 				// series2.Points.AddXY(i + 1, profit + commission + swap);
 				series1.Points.Add(new DataPoint(i + 1, profit));
 				series2.Points.Add(new DataPoint(i + 1, profit + commission + swap));
-
 			}
 			int desiredTicks = 20; // požadovaný počet hlavních čárek
 
@@ -150,6 +155,15 @@ namespace SvpTradingPanel
 				MinorGridlineStyle = LineStyle.Dot,
 				Minimum = minProfit - majorStep,
 				Maximum = maxProfit + majorStep,
+			});
+
+			// Přidej osu Y s menším krokem pro popisky
+			plotModel.Axes.Add(new LinearAxis
+			{
+				Position = AxisPosition.Bottom,
+				Minimum = 0,
+				MajorGridlineStyle = LineStyle.Solid,
+				MinorGridlineStyle = LineStyle.Dot,
 			});
 
 			plotModel.Series.Add(series1);
