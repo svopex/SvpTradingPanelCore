@@ -805,6 +805,7 @@ namespace SvpTradingPanel
 			{
 				// Stop animation and show static disconnected state
 				timerLabelConnected?.Stop();
+				timerLabelConnected = null;
 				labelConnected.Text = "[-----------]";
 				labelConnected.ForeColor = Color.Red;
 			}
@@ -1200,9 +1201,9 @@ namespace SvpTradingPanel
 
 		private void buttonEquity_Click(object sender, EventArgs e)
 		{
-			//FormEquity formEquity = new FormEquity();
-			//formEquity.MainWindowTopMost = checkBoxAlwaysOnTop.Checked;
-			//formEquity.ShowDialog();
+			FormEquity formEquity = new FormEquity();
+			formEquity.MainWindowTopMost = checkBoxAlwaysOnTop.Checked;
+			formEquity.ShowDialog();
 		}
 
 		private void buttonCallHueTest_Click(object sender, EventArgs e)

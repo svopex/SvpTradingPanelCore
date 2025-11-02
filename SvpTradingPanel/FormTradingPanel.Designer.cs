@@ -542,7 +542,6 @@
 			// 
 			// buttonEquity
 			// 
-			buttonEquity.Enabled = false;
 			buttonEquity.Location = new Point(879, 162);
 			buttonEquity.Margin = new Padding(4, 5, 4, 5);
 			buttonEquity.Name = "buttonEquity";
