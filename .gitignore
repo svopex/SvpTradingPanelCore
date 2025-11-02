@@ -3,5 +3,10 @@
 ################################################################################
 
 /.vs
-/build/products/Debug/net8.0
-
+/build/products/Debug/net8.0                                                                                                                                                       
+/SvpTradingPanel/bin
+/SvpTradingPanel/obj
+/Utils/bin/
+/Utils/obj/
+/MtpApi/bin/
+/MtpApi/obj/
