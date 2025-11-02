@@ -2,7 +2,7 @@
   "profiles": {
     "SvpTradingPanel": {
       "commandName": "Project",
-      "commandLineArgs": "MT5 8228 - 250000 0.005 1 100 1"
+      "commandLineArgs": "MT5 8229 SvpTradingPanel 250000 0.005 1 100 1"
     }
   }
 }

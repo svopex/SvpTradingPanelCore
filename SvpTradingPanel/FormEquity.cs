@@ -110,8 +110,8 @@ namespace SvpTradingPanel
 			double spending = 0;
 			double commission = 0;
 			double swap = 0;
-			double minProfit = int.MaxValue;
-			double maxProfit = int.MinValue;
+			double minProfit = 0;
+			double maxProfit = 0;
 			for (int i = 0; i < results.Count(); i++)
 			{
 				if (results[i].profit >= 0)
