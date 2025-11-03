@@ -864,7 +864,7 @@ namespace SvpTradingPanel
 				counter = 1;
 				foreach (var order in orders)
 				{
-					MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+					MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
 					counter++;
 				}
 				RefreshData(orders);
