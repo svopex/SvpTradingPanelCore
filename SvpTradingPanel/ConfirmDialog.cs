@@ -38,11 +38,14 @@ namespace SvpTradingPanel
 		{
 			this.Text = "Confirmation";
 			this.StartPosition = FormStartPosition.CenterParent;
-			this.Width = 650;
-			this.Height = 260;
+			this.Width = 600;
+			this.Height = 350;
 			this.TopMost = true;
 			this.KeyPreview = true;
 			this.KeyDown += ConfirmDialog_KeyDown;
+			this.FormBorderStyle = FormBorderStyle.FixedDialog;
+			this.MaximizeBox = false;
+			this.MinimizeBox = false;
 
 			// Obrázek vlevo
 			var pictureBox = new PictureBox
@@ -62,35 +65,47 @@ namespace SvpTradingPanel
 				AutoSize = false,
 				Width = 450,
 				Height = 60,
-				Top = 30,
+				Top = 50,
 				Left = 140,
 				// Font = new System.Drawing.Font("Segoe UI", 14)
 			};
 			this.Controls.Add(label);
 
+			var panel = new Panel
+			{
+				Width = this.ClientSize.Width,
+				Height = 130,
+				// Top = 80,
+				Left = 0,
+				Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+				Dock = DockStyle.Bottom,
+				BackColor = System.Drawing.SystemColors.ControlLight
+			};
+			this.Controls.Add(panel);
+
 			var btnYes = new Button
 			{
-				Text = "Yes",
+				Text = "&Yes",
 				DialogResult = DialogResult.Yes,
-				Left = 140,
+				Left = 180,
 				Width = 120,
-				Top = 90,
+				Top = 40,
 				Height = 60,
-				// Font = new System.Drawing.Font("Segoe UI", 12)
+				// Font = new System.Drawing.Font("Segoe UI", 8)
 			};
-			this.Controls.Add(btnYes);
+			panel.Controls.Add(btnYes);
 
 			var btnNo = new Button
 			{
-				Text = "No",
+				Text = "&No",
 				DialogResult = DialogResult.No,
-				Left = 280,
+				Left = 320,
 				Width = 120,
-				Top = 90,
+				Top = 40,
 				Height = 60,
 				// Font = new System.Drawing.Font("Segoe UI", 12)
 			};
-			this.Controls.Add(btnNo);
+			panel.Controls.Add(btnNo);
 
 			this.AcceptButton = btnYes;
 			this.CancelButton = btnNo;
