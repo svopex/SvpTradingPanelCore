@@ -87,10 +87,11 @@ namespace SvpTradingPanel
 			{
 				Text = "&Yes",
 				DialogResult = DialogResult.Yes,
-				Left = 180,
+				Left = 155,
 				Width = 120,
-				Top = 40,
+				Top = 37,
 				Height = 60,
+				BackColor = System.Drawing.SystemColors.Control,
 				// Font = new System.Drawing.Font("Segoe UI", 8)
 			};
 			panel.Controls.Add(btnYes);
@@ -99,10 +100,11 @@ namespace SvpTradingPanel
 			{
 				Text = "&No",
 				DialogResult = DialogResult.No,
-				Left = 320,
+				Left = 295,
 				Width = 120,
-				Top = 40,
+				Top = 37,
 				Height = 60,
+				BackColor = System.Drawing.SystemColors.Control,
 				// Font = new System.Drawing.Font("Segoe UI", 12)
 			};
 			panel.Controls.Add(btnNo);
