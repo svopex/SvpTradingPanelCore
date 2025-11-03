@@ -173,7 +173,7 @@
 			// checkBoxAlwaysOnTop
 			// 
 			checkBoxAlwaysOnTop.AutoSize = true;
-			checkBoxAlwaysOnTop.Location = new Point(1122, 164);
+			checkBoxAlwaysOnTop.Location = new Point(1099, 164);
 			checkBoxAlwaysOnTop.Margin = new Padding(4, 5, 4, 5);
 			checkBoxAlwaysOnTop.Name = "checkBoxAlwaysOnTop";
 			checkBoxAlwaysOnTop.Size = new Size(196, 36);
@@ -427,7 +427,7 @@
 			// checkBoxPendingOrder
 			// 
 			checkBoxPendingOrder.AutoSize = true;
-			checkBoxPendingOrder.Location = new Point(1122, 211);
+			checkBoxPendingOrder.Location = new Point(1099, 211);
 			checkBoxPendingOrder.Margin = new Padding(4, 5, 4, 5);
 			checkBoxPendingOrder.Name = "checkBoxPendingOrder";
 			checkBoxPendingOrder.Size = new Size(197, 36);
@@ -439,7 +439,7 @@
 			// checkBoxMovePendingOrder
 			// 
 			checkBoxMovePendingOrder.AutoSize = true;
-			checkBoxMovePendingOrder.Location = new Point(975, 392);
+			checkBoxMovePendingOrder.Location = new Point(954, 394);
 			checkBoxMovePendingOrder.Margin = new Padding(4, 5, 4, 5);
 			checkBoxMovePendingOrder.Name = "checkBoxMovePendingOrder";
 			checkBoxMovePendingOrder.Size = new Size(346, 36);
@@ -461,7 +461,7 @@
 			// trackBarPositionUsing
 			// 
 			trackBarPositionUsing.LargeChange = 50;
-			trackBarPositionUsing.Location = new Point(195, 275);
+			trackBarPositionUsing.Location = new Point(195, 262);
 			trackBarPositionUsing.Margin = new Padding(4, 5, 4, 5);
 			trackBarPositionUsing.Maximum = 300;
 			trackBarPositionUsing.Minimum = 10;
@@ -542,7 +542,7 @@
 			// 
 			// buttonEquity
 			// 
-			buttonEquity.Location = new Point(879, 162);
+			buttonEquity.Location = new Point(871, 162);
 			buttonEquity.Margin = new Padding(4, 5, 4, 5);
 			buttonEquity.Name = "buttonEquity";
 			buttonEquity.Size = new Size(208, 88);
@@ -635,7 +635,7 @@
 			// labelContractSize
 			// 
 			labelContractSize.AutoSize = true;
-			labelContractSize.Location = new Point(1089, 110);
+			labelContractSize.Location = new Point(1071, 110);
 			labelContractSize.Margin = new Padding(4, 0, 4, 0);
 			labelContractSize.Name = "labelContractSize";
 			labelContractSize.Size = new Size(154, 32);
@@ -646,7 +646,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(13F, 32F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(1336, 1591);
+			ClientSize = new Size(1334, 1327);
 			Controls.Add(labelContractSize);
 			Controls.Add(labelUsdCzk);
 			Controls.Add(labelTickValue);

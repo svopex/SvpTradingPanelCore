@@ -39,7 +39,7 @@
 			// 
 			labelIncome.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
 			labelIncome.AutoSize = true;
-			labelIncome.Location = new Point(26, 1147);
+			labelIncome.Location = new Point(26, 1302);
 			labelIncome.Margin = new Padding(7, 0, 7, 0);
 			labelIncome.Name = "labelIncome";
 			labelIncome.Size = new Size(78, 32);
@@ -50,7 +50,7 @@
 			// 
 			labelTaxForm.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
 			labelTaxForm.AutoSize = true;
-			labelTaxForm.Location = new Point(26, 1195);
+			labelTaxForm.Location = new Point(26, 1354);
 			labelTaxForm.Margin = new Padding(7, 0, 7, 0);
 			labelTaxForm.Name = "labelTaxForm";
 			labelTaxForm.Size = new Size(78, 32);

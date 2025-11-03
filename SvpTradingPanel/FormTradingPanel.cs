@@ -36,8 +36,25 @@ namespace SvpTradingPanel
 		public FormTradingPanel()
 		{
 			InitializeComponent();
+
+			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 		}
 
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+
+			// Např. zmenší celý formulář na 80 % původní velikosti
+			float scaleFactor = 0.8f;
+			this.Scale(new SizeF(scaleFactor, scaleFactor));
+
+			// Volitelné: aby i fonty odpovídaly
+			foreach (Control c in this.Controls)
+			{
+				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
+			}
+		}
+		
 		private void RefreshLabelSlLoss()
 		{
 			if (MetatraderInstance.Instance != null)

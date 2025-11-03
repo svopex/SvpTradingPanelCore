@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageIcon>icon.png</PackageIcon>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+	<EnableWindowsFormsHighDpiAutoRescaling>true</EnableWindowsFormsHighDpiAutoRescaling>
   </PropertyGroup>
 
   <ItemGroup>

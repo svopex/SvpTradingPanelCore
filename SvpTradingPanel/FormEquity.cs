@@ -25,6 +25,8 @@ namespace SvpTradingPanel
 				Height = (int)(this.ClientSize.Height * 0.9)
 			};
 			this.Controls.Add(plotView);
+
+			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 		}
 
 		public int GetYear()
@@ -124,7 +126,7 @@ namespace SvpTradingPanel
 				{
 					spending += results[i].profit;
 					commission += results[i].commission;
-					swap += results[i].swap;					
+					swap += results[i].swap;
 				}
 				profit += results[i].profit;
 
