@@ -29,7 +29,7 @@ namespace SvpTradingPanel
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 		}
 
-		public int GetYear()
+		public int? GetYear()
 		{
 			if (int.TryParse(textBoxYear.Text, out int result))
 			{
@@ -37,7 +37,7 @@ namespace SvpTradingPanel
 			}
 			else
 			{
-				return DateTime.Now.Year;
+				return null;
 			}
 		}
 
@@ -59,7 +59,15 @@ namespace SvpTradingPanel
 
 		private void RefreshData()
 		{
-			List<History> results = MetatraderInstance.Instance.GetLatestProfitHistory(new DateTime(GetYear(), 1, 1, 0, 0, 0), new DateTime(GetYear(), 12, 31, 23, 59, 59));
+			List<History> results;
+			if (GetYear() == null)
+			{
+				int actualYear = DateTime.Now.Year;
+				results = MetatraderInstance.Instance.GetLatestProfitHistory(new DateTime(actualYear - 20, 1, 1, 0, 0, 0), new DateTime(actualYear, 12, 31, 23, 59, 59));
+			} else
+			{
+				results = MetatraderInstance.Instance.GetLatestProfitHistory(new DateTime(GetYear()!.Value, 1, 1, 0, 0, 0), new DateTime(GetYear()!.Value, 12, 31, 23, 59, 59));
+			}
 
 			results = results.Where(x => !String.IsNullOrWhiteSpace(x.comment) && (Utilities.StrategyName == null || x.comment.StartsWith(Utilities.StrategyName) || Utilities.StrategyName.ToLower() == "none")).ToList();
 
