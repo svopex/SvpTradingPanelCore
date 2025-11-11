@@ -53,6 +53,8 @@ namespace SvpTradingPanel
 			{
 				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
 			}
+
+			BlinkOnEveningMinute = 0;
 		}
 		
 		private void RefreshLabelSlLoss()
@@ -957,20 +959,32 @@ namespace SvpTradingPanel
 			//	+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
 		}
 
-		private void CallHue(bool Pt)
+		private enum HueType
+		{
+			Stoploss, 
+			Takeprofit,
+			Hue
+		};
+
+		private void CallHue(HueType HueType)
 		{
 			try
 			{
 				using (var client = new HttpClient())
 				{
 					string url;
-					if (Pt)
+					if (HueType == HueType.Takeprofit)
 					{
 						url = "http://localhost/huePt";
 					}
-					else
+					else if (HueType == HueType.Stoploss)
 					{
 						url = "http://localhost/hueSl";
+					} else if (HueType == HueType.Hue)
+					{
+						url = "http://localhost/hue";
+					} else {
+						return;
 					}
 					var body = "This is the body of the request.";
 					var content = new StringContent(body);
@@ -1039,7 +1053,7 @@ namespace SvpTradingPanel
 							{
 								if (checkBoxBlink.Checked)
 								{
-									CallHue(result.profit >= 0);
+									CallHue(result.profit >= 0 ? HueType.Takeprofit : HueType.Stoploss);
 								}
 							}
 
@@ -1128,6 +1142,28 @@ namespace SvpTradingPanel
 			}
 		}
 
+		private int BlinkOnEveningMinute;
+
+		private void BlinkOnEvening()
+		{
+			try
+			{
+				DateTime now = DateTime.Now;
+				if (now.Hour >= 22 && now.Minute >= 30 && now.Hour < 23)
+				{
+					if (checkBoxBlink.Checked)
+					{
+						if (BlinkOnEveningMinute > 55 || BlinkOnEveningMinute == 0 || now.Minute == BlinkOnEveningMinute)
+						{
+							CallHue(HueType.Hue);
+							BlinkOnEveningMinute = (now.Minute + 5) % 60;
+						}
+					}
+				}
+			}
+			catch (Exception) { }
+		}
+
 		private void timerRefreshLabels_Tick(object sender, EventArgs e)
 		{
 			bool connected = MetatraderInstance.IsConnected();
@@ -1164,6 +1200,8 @@ namespace SvpTradingPanel
 								+ Utilities.TrackBarPositionUsing + "%, "
 								+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
 						}
+
+						BlinkOnEvening();
 					}
 					catch (Exception ex)
 					{
@@ -1243,7 +1281,7 @@ namespace SvpTradingPanel
 
 		private void buttonCallHueTest_Click(object sender, EventArgs e)
 		{
-			CallHue(true);
+			CallHue(HueType.Hue);
 		}		
 
 		private void FormTradingPanel_FormClosing(object sender, FormClosingEventArgs e)
