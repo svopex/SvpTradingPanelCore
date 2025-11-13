@@ -53,8 +53,6 @@ namespace SvpTradingPanel
 			{
 				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
 			}
-
-			BlinkOnEveningMinute = 0;
 		}
 		
 		private void RefreshLabelSlLoss()
@@ -1142,26 +1140,33 @@ namespace SvpTradingPanel
 			}
 		}
 
-		private int BlinkOnEveningMinute;
+		private int lastTriggeredMinute = -1;
 
 		private void BlinkOnEvening()
 		{
 			try
 			{
 				DateTime now = DateTime.Now;
-				if (now.Hour >= 22 && now.Minute >= 30 && now.Hour < 23)
+
+				// časový interval 22:30–22:55
+				if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 55)
 				{
 					if (checkBoxBlink.Checked)
 					{
-						if (BlinkOnEveningMinute > 55 || BlinkOnEveningMinute == 0 || now.Minute == BlinkOnEveningMinute)
+						// každých 5 minut => minuta dělitelná 5
+						if (now.Minute % 5 == 0)
 						{
-							CallHue(HueType.Hue);
-							BlinkOnEveningMinute = now.Minute + 5;
+							// spustit pouze pokud to ještě nebylo v této minutě spuštěno
+							if (lastTriggeredMinute != now.Minute)
+							{
+								CallHue(HueType.Hue);
+								lastTriggeredMinute = now.Minute;
+							}
 						}
 					}
 				}
 			}
-			catch (Exception) { }
+			catch { }
 		}
 
 		private void timerRefreshLabels_Tick(object sender, EventArgs e)
