@@ -1156,7 +1156,7 @@ namespace SvpTradingPanel
 						if (BlinkOnEveningMinute > 55 || BlinkOnEveningMinute == 0 || now.Minute == BlinkOnEveningMinute)
 						{
 							CallHue(HueType.Hue);
-							BlinkOnEveningMinute = (now.Minute + 5) % 60;
+							BlinkOnEveningMinute = now.Minute + 5;
 						}
 					}
 				}
