@@ -1195,7 +1195,7 @@ namespace SvpTradingPanel
 						if (this.Text == "SvpTradingPanel")
 						{
 							string currency = MetatraderInstance.Instance.AccountCurrency();
-							this.Text = "SvpTradingPanel Core: "
+							this.Text = "STP Core: "
 								+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
 								+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
 								+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
