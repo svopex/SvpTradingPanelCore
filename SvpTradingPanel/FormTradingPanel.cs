@@ -96,6 +96,12 @@ namespace SvpTradingPanel
 			var rrr = orders.Select(x => ((Math.Abs(x.OpenPrice - x.PT)) / (Math.Abs(x.OpenPrice - x.SL))) / sumOfUnits * Math.Abs(x.Units)).Sum();
 			var loss = orders.Select(x => Math.Abs(x.OpenPrice - x.SL) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
 			var profit = orders.Select(x => Math.Abs(x.OpenPrice - x.PT) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
+			if (!IsForex(MetatraderInstance.Instance.Symbol))
+			{
+				double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
+				loss = loss * course;
+				profit = profit * course;
+			}
 			labelRrr.Text = "RRR: " + Math.Round(rrr, 2);
 			labelLoss.Text = "Loss: " + Math.Round(loss, 2) + " " + currency;
 			labelProfit.Text = "Profit: " + Math.Round(profit, 2) + " " + currency;
