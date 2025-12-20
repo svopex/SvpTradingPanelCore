@@ -54,7 +54,7 @@ namespace SvpTradingPanel
 				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
 			}
 		}
-		
+
 		private void RefreshLabelSlLoss()
 		{
 			if (MetatraderInstance.Instance != null)
@@ -723,12 +723,12 @@ namespace SvpTradingPanel
 
 		private void buttonSlUpMini_Click(object sender, EventArgs e)
 		{
-			SlUp(0.000125);
+			SlUp(0.00006);
 		}
 
 		private void buttonSlDownMini_Click(object sender, EventArgs e)
 		{
-			SlDown(0.000125);
+			SlDown(0.00006);
 		}
 
 		private void checkBoxAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
@@ -896,6 +896,33 @@ namespace SvpTradingPanel
 			textBoxPrice.Enabled = checkBoxPendingOrder.Checked;
 		}
 
+		private void buttonSetTp15_Click(object sender, EventArgs e)
+		{
+			double counter;
+			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+			if (orders.Any())
+			{
+				counter = 1.5;
+				foreach (var order in orders)
+				{
+					MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+					counter += 0.5;
+				}
+				RefreshData(orders);
+			}
+			else
+			{
+				counter = 1.5;
+				orders = MetatraderInstance.Instance.GetPendingOrders();
+				foreach (var order in orders)
+				{
+					MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+					counter += 0.5;
+				}
+				RefreshData(orders);
+			}
+		}
+
 		private void buttonSetTp_Click(object sender, EventArgs e)
 		{
 			int counter;
@@ -965,7 +992,7 @@ namespace SvpTradingPanel
 
 		private enum HueType
 		{
-			Stoploss, 
+			Stoploss,
 			Takeprofit,
 			Hue
 		};
@@ -984,10 +1011,13 @@ namespace SvpTradingPanel
 					else if (HueType == HueType.Stoploss)
 					{
 						url = "http://localhost/hueSl";
-					} else if (HueType == HueType.Hue)
+					}
+					else if (HueType == HueType.Hue)
 					{
 						url = "http://localhost/hue";
-					} else {
+					}
+					else
+					{
 						return;
 					}
 					var body = "This is the body of the request.";
@@ -1293,7 +1323,7 @@ namespace SvpTradingPanel
 		private void buttonCallHueTest_Click(object sender, EventArgs e)
 		{
 			CallHue(HueType.Hue);
-		}		
+		}
 
 		private void FormTradingPanel_FormClosing(object sender, FormClosingEventArgs e)
 		{

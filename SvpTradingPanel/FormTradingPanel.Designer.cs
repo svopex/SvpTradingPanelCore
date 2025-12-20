@@ -83,6 +83,7 @@
 			labelTickValue = new Label();
 			labelUsdCzk = new Label();
 			labelContractSize = new Label();
+			buttonSetTp15 = new Button();
 			((System.ComponentModel.ISupportInitialize)trackBarPositionUsing).BeginInit();
 			SuspendLayout();
 			// 
@@ -117,7 +118,7 @@
 			// 
 			// buttonSlUp
 			// 
-			buttonSlUp.Location = new Point(875, 440);
+			buttonSlUp.Location = new Point(880, 440);
 			buttonSlUp.Margin = new Padding(4, 5, 4, 5);
 			buttonSlUp.Name = "buttonSlUp";
 			buttonSlUp.Size = new Size(211, 101);
@@ -139,7 +140,7 @@
 			// 
 			// buttonJoinSl
 			// 
-			buttonJoinSl.Location = new Point(1096, 659);
+			buttonJoinSl.Location = new Point(1096, 657);
 			buttonJoinSl.Margin = new Padding(4, 5, 4, 5);
 			buttonJoinSl.Name = "buttonJoinSl";
 			buttonJoinSl.Size = new Size(208, 101);
@@ -317,7 +318,7 @@
 			// 
 			// buttonCloseAll
 			// 
-			buttonCloseAll.Location = new Point(659, 659);
+			buttonCloseAll.Location = new Point(659, 657);
 			buttonCloseAll.Margin = new Padding(4, 5, 4, 5);
 			buttonCloseAll.Name = "buttonCloseAll";
 			buttonCloseAll.Size = new Size(212, 101);
@@ -449,7 +450,7 @@
 			// 
 			// buttonSetTp
 			// 
-			buttonSetTp.Location = new Point(875, 659);
+			buttonSetTp.Location = new Point(878, 657);
 			buttonSetTp.Margin = new Padding(4, 5, 4, 5);
 			buttonSetTp.Name = "buttonSetTp";
 			buttonSetTp.Size = new Size(212, 101);
@@ -504,7 +505,7 @@
 			// 
 			// buttonSlToBeAutomation
 			// 
-			buttonSlToBeAutomation.Location = new Point(659, 835);
+			buttonSlToBeAutomation.Location = new Point(659, 942);
 			buttonSlToBeAutomation.Margin = new Padding(4, 5, 4, 5);
 			buttonSlToBeAutomation.Name = "buttonSlToBeAutomation";
 			buttonSlToBeAutomation.Size = new Size(641, 74);
@@ -515,7 +516,7 @@
 			// 
 			// progressBarSlToBeAutomation
 			// 
-			progressBarSlToBeAutomation.Location = new Point(664, 920);
+			progressBarSlToBeAutomation.Location = new Point(664, 1027);
 			progressBarSlToBeAutomation.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlToBeAutomation.Name = "progressBarSlToBeAutomation";
 			progressBarSlToBeAutomation.Size = new Size(636, 61);
@@ -523,7 +524,7 @@
 			// 
 			// buttonSlPtMonitoring
 			// 
-			buttonSlPtMonitoring.Location = new Point(659, 1147);
+			buttonSlPtMonitoring.Location = new Point(659, 1254);
 			buttonSlPtMonitoring.Margin = new Padding(4, 5, 4, 5);
 			buttonSlPtMonitoring.Name = "buttonSlPtMonitoring";
 			buttonSlPtMonitoring.Size = new Size(646, 74);
@@ -534,7 +535,7 @@
 			// 
 			// progressBarSlPtMonitoring
 			// 
-			progressBarSlPtMonitoring.Location = new Point(664, 1230);
+			progressBarSlPtMonitoring.Location = new Point(664, 1337);
 			progressBarSlPtMonitoring.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlPtMonitoring.Name = "progressBarSlPtMonitoring";
 			progressBarSlPtMonitoring.Size = new Size(636, 61);
@@ -565,7 +566,7 @@
 			// checkBoxBlink
 			// 
 			checkBoxBlink.AutoSize = true;
-			checkBoxBlink.Location = new Point(664, 782);
+			checkBoxBlink.Location = new Point(664, 889);
 			checkBoxBlink.Margin = new Padding(5, 8, 5, 8);
 			checkBoxBlink.Name = "checkBoxBlink";
 			checkBoxBlink.Size = new Size(237, 36);
@@ -575,7 +576,7 @@
 			// 
 			// progressBarSlToHalfAutomation
 			// 
-			progressBarSlToHalfAutomation.Location = new Point(664, 1075);
+			progressBarSlToHalfAutomation.Location = new Point(664, 1182);
 			progressBarSlToHalfAutomation.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlToHalfAutomation.Name = "progressBarSlToHalfAutomation";
 			progressBarSlToHalfAutomation.Size = new Size(636, 61);
@@ -583,7 +584,7 @@
 			// 
 			// buttonSlToHalfAutomation
 			// 
-			buttonSlToHalfAutomation.Location = new Point(659, 988);
+			buttonSlToHalfAutomation.Location = new Point(659, 1095);
 			buttonSlToHalfAutomation.Margin = new Padding(4, 5, 4, 5);
 			buttonSlToHalfAutomation.Name = "buttonSlToHalfAutomation";
 			buttonSlToHalfAutomation.Size = new Size(641, 74);
@@ -594,7 +595,7 @@
 			// 
 			// buttonCallHueTest
 			// 
-			buttonCallHueTest.Location = new Point(38, 1198);
+			buttonCallHueTest.Location = new Point(35, 1306);
 			buttonCallHueTest.Name = "buttonCallHueTest";
 			buttonCallHueTest.Size = new Size(300, 92);
 			buttonCallHueTest.TabIndex = 94;
@@ -642,11 +643,23 @@
 			labelContractSize.TabIndex = 98;
 			labelContractSize.Text = "Contract Size";
 			// 
+			// buttonSetTp15
+			// 
+			buttonSetTp15.Location = new Point(878, 766);
+			buttonSetTp15.Margin = new Padding(4, 5, 4, 5);
+			buttonSetTp15.Name = "buttonSetTp15";
+			buttonSetTp15.Size = new Size(212, 101);
+			buttonSetTp15.TabIndex = 99;
+			buttonSetTp15.Text = "Re-set TP 1.5";
+			buttonSetTp15.UseVisualStyleBackColor = true;
+			buttonSetTp15.Click += buttonSetTp15_Click;
+			// 
 			// FormTradingPanel
 			// 
 			AutoScaleDimensions = new SizeF(13F, 32F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(1334, 1327);
+			ClientSize = new Size(1331, 1428);
+			Controls.Add(buttonSetTp15);
 			Controls.Add(labelContractSize);
 			Controls.Add(labelUsdCzk);
 			Controls.Add(labelTickValue);
@@ -768,6 +781,7 @@
 		private System.Windows.Forms.Label labelTickValue;
 		private System.Windows.Forms.Label labelUsdCzk;
 		private System.Windows.Forms.Label labelContractSize;
+		private Button buttonSetTp15;
 	}
 }
 
