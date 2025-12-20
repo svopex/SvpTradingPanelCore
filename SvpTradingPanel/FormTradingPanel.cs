@@ -283,7 +283,7 @@ namespace SvpTradingPanel
 			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
 			if (error && positionSize != null && price != null)
 			{
-				var dlg = new ConfirmDialog(buy);
+				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
 				var result = dlg.ShowDialog();
 				if (result == DialogResult.Yes)
 				{
@@ -318,7 +318,7 @@ namespace SvpTradingPanel
 			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
 			if (error && positionSize != null && price != null)
 			{
-				var dlg = new ConfirmDialog(buy);
+				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
 				var result = dlg.ShowDialog();
 				if (result == DialogResult.Yes)
 				{
@@ -353,7 +353,7 @@ namespace SvpTradingPanel
 			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
 			if (error && positionSize != null && price != null)
 			{
-				var dlg = new ConfirmDialog(buy);
+				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
 				var result = dlg.ShowDialog();
 				if (result == DialogResult.Yes)
 				{
@@ -409,7 +409,7 @@ namespace SvpTradingPanel
 			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
 			if (error && positionSize != null && price != null)
 			{
-				var dlg = new ConfirmDialog(buy);
+				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
 				var result = dlg.ShowDialog();
 				if (result == DialogResult.Yes)
 				{
@@ -889,8 +889,9 @@ namespace SvpTradingPanel
 
 		private void buttonCloseAll_Click(object sender, EventArgs e)
 		{
-			DialogResult dialogResult = MessageBox.Show("Do you really close all orders?", "SvpTradePanel", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
-			if (dialogResult == DialogResult.Yes)
+			var dlg = new ConfirmDialog("Do you really close all orders?");
+			var result = dlg.ShowDialog();
+			if (result == DialogResult.Yes)
 			{
 				closeAll(false);
 			}

@@ -34,7 +34,7 @@ namespace SvpTradingPanel
 			}
 		}
 
-		public ConfirmDialog(bool buy)
+		public ConfirmDialog(string question)
 		{
 			this.Text = "Confirmation";
 			this.StartPosition = FormStartPosition.CenterParent;
@@ -61,7 +61,7 @@ namespace SvpTradingPanel
 
 			var label = new Label
 			{
-				Text = "Do you really open order " + (buy ? "to long" : "to short") + "?",
+				Text = question,
 				AutoSize = false,
 				Width = 450,
 				Height = 60,
