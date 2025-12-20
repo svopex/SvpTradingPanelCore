@@ -1225,17 +1225,14 @@ namespace SvpTradingPanel
 					// časový interval 22:30–22:55
 					if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 45)
 					{
-						if (checkBoxBlink.Checked)
+						// každých 5 minut => minuta dělitelná 5
+						if (now.Minute % 5 == 0)
 						{
-							// každých 5 minut => minuta dělitelná 5
-							if (now.Minute % 5 == 0)
+							// spustit pouze pokud to ještě nebylo v této minutě spuštěno
+							if (autoCloseTradesLastTriggeredMinute != now.Minute)
 							{
-								// spustit pouze pokud to ještě nebylo v této minutě spuštěno
-								if (autoCloseTradesLastTriggeredMinute != now.Minute)
-								{
-									closeAll(true);
-									autoCloseTradesLastTriggeredMinute = now.Minute;
-								}
+								closeAll(true);
+								autoCloseTradesLastTriggeredMinute = now.Minute;
 							}
 						}
 					}
