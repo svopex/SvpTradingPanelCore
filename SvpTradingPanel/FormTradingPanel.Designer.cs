@@ -84,6 +84,7 @@
 			labelUsdCzk = new Label();
 			labelContractSize = new Label();
 			buttonSetTp15 = new Button();
+			checkBoxAutoCloseTrades = new CheckBox();
 			((System.ComponentModel.ISupportInitialize)trackBarPositionUsing).BeginInit();
 			SuspendLayout();
 			// 
@@ -140,7 +141,7 @@
 			// 
 			// buttonJoinSl
 			// 
-			buttonJoinSl.Location = new Point(1096, 657);
+			buttonJoinSl.Location = new Point(880, 660);
 			buttonJoinSl.Margin = new Padding(4, 5, 4, 5);
 			buttonJoinSl.Name = "buttonJoinSl";
 			buttonJoinSl.Size = new Size(208, 101);
@@ -318,7 +319,7 @@
 			// 
 			// buttonCloseAll
 			// 
-			buttonCloseAll.Location = new Point(659, 657);
+			buttonCloseAll.Location = new Point(1099, 660);
 			buttonCloseAll.Margin = new Padding(4, 5, 4, 5);
 			buttonCloseAll.Name = "buttonCloseAll";
 			buttonCloseAll.Size = new Size(212, 101);
@@ -450,7 +451,7 @@
 			// 
 			// buttonSetTp
 			// 
-			buttonSetTp.Location = new Point(878, 657);
+			buttonSetTp.Location = new Point(659, 660);
 			buttonSetTp.Margin = new Padding(4, 5, 4, 5);
 			buttonSetTp.Name = "buttonSetTp";
 			buttonSetTp.Size = new Size(212, 101);
@@ -645,7 +646,7 @@
 			// 
 			// buttonSetTp15
 			// 
-			buttonSetTp15.Location = new Point(878, 766);
+			buttonSetTp15.Location = new Point(659, 769);
 			buttonSetTp15.Margin = new Padding(4, 5, 4, 5);
 			buttonSetTp15.Name = "buttonSetTp15";
 			buttonSetTp15.Size = new Size(212, 101);
@@ -654,11 +655,23 @@
 			buttonSetTp15.UseVisualStyleBackColor = true;
 			buttonSetTp15.Click += buttonSetTp15_Click;
 			// 
+			// checkBoxAutoCloseTrades
+			// 
+			checkBoxAutoCloseTrades.AutoSize = true;
+			checkBoxAutoCloseTrades.Location = new Point(1074, 774);
+			checkBoxAutoCloseTrades.Margin = new Padding(5, 8, 5, 8);
+			checkBoxAutoCloseTrades.Name = "checkBoxAutoCloseTrades";
+			checkBoxAutoCloseTrades.Size = new Size(230, 36);
+			checkBoxAutoCloseTrades.TabIndex = 100;
+			checkBoxAutoCloseTrades.Text = "Auto close trades";
+			checkBoxAutoCloseTrades.UseVisualStyleBackColor = true;
+			// 
 			// FormTradingPanel
 			// 
 			AutoScaleDimensions = new SizeF(13F, 32F);
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(1331, 1428);
+			Controls.Add(checkBoxAutoCloseTrades);
 			Controls.Add(buttonSetTp15);
 			Controls.Add(labelContractSize);
 			Controls.Add(labelUsdCzk);
@@ -782,6 +795,7 @@
 		private System.Windows.Forms.Label labelUsdCzk;
 		private System.Windows.Forms.Label labelContractSize;
 		private Button buttonSetTp15;
+		private CheckBox checkBoxAutoCloseTrades;
 	}
 }
 

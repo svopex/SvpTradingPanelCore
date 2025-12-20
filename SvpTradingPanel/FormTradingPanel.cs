@@ -870,24 +870,29 @@ namespace SvpTradingPanel
 			}
 		}
 
+		private void closeAll()
+		{
+			SlToBeAutomation = false;
+
+			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+			foreach (var order in orders)
+			{
+				MetatraderInstance.Instance.CloseMarketOrder(order.Id);
+			}
+			orders = MetatraderInstance.Instance.GetPendingOrders();
+			foreach (var order in orders)
+			{
+				MetatraderInstance.Instance.ClosePendingOrder(order.Id);
+			}
+			//MetatraderInstance.Instance.CloseAllPendingOrders();
+		}
+
 		private void buttonCloseAll_Click(object sender, EventArgs e)
 		{
 			DialogResult dialogResult = MessageBox.Show("Do you really close all orders?", "SvpTradePanel", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
 			if (dialogResult == DialogResult.Yes)
 			{
-				SlToBeAutomation = false;
-
-				Orders orders = MetatraderInstance.Instance.GetMarketOrders();
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.CloseMarketOrder(order.Id);
-				}
-				orders = MetatraderInstance.Instance.GetPendingOrders();
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.ClosePendingOrder(order.Id);
-				}
-				//MetatraderInstance.Instance.CloseAllPendingOrders();
+				closeAll();
 			}
 		}
 
@@ -977,6 +982,8 @@ namespace SvpTradingPanel
 			trackBarPositionUsing_ValueChanged(null, null);
 
 			timerRefreshLabels.Interval = 1000;
+
+			checkBoxAutoCloseTrades.Checked = true;
 
 			//string currency = MetatraderInstance.Instance.AccountCurrency();
 			//this.Text = "SvpTradingPanel: "
@@ -1176,7 +1183,7 @@ namespace SvpTradingPanel
 			}
 		}
 
-		private int lastTriggeredMinute = -1;
+		private int blinkOnEveningLastTriggeredMinute = -1;
 
 		private void BlinkOnEvening()
 		{
@@ -1193,16 +1200,48 @@ namespace SvpTradingPanel
 						if (now.Minute % 5 == 0)
 						{
 							// spustit pouze pokud to ještě nebylo v této minutě spuštěno
-							if (lastTriggeredMinute != now.Minute)
+							if (blinkOnEveningLastTriggeredMinute != now.Minute)
 							{
 								CallHue(HueType.Hue);
-								lastTriggeredMinute = now.Minute;
+								blinkOnEveningLastTriggeredMinute = now.Minute;
 							}
 						}
 					}
 				}
 			}
 			catch { }
+		}
+
+		private int autoCloseTradesLastTriggeredMinute = -1;
+
+		private void AutoCloseTrades()
+		{
+			if (checkBoxAutoCloseTrades.Checked)
+			{
+				try
+				{
+					DateTime now = DateTime.Now;
+
+					// časový interval 22:30–22:55
+					if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 45)
+					{
+						if (checkBoxBlink.Checked)
+						{
+							// každých 5 minut => minuta dělitelná 5
+							if (now.Minute % 5 == 0)
+							{
+								// spustit pouze pokud to ještě nebylo v této minutě spuštěno
+								if (autoCloseTradesLastTriggeredMinute != now.Minute)
+								{
+									closeAll();
+									autoCloseTradesLastTriggeredMinute = now.Minute;
+								}
+							}
+						}
+					}
+				}
+				catch { }
+			}
 		}
 
 		private void timerRefreshLabels_Tick(object sender, EventArgs e)
@@ -1243,6 +1282,8 @@ namespace SvpTradingPanel
 						}
 
 						BlinkOnEvening();
+
+						AutoCloseTrades();
 					}
 					catch (Exception ex)
 					{
