@@ -90,7 +90,7 @@
 			// 
 			// buttonOrderBuy1
 			// 
-			buttonOrderBuy1.Location = new Point(35, 835);
+			buttonOrderBuy1.Location = new Point(32, 835);
 			buttonOrderBuy1.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderBuy1.Name = "buttonOrderBuy1";
 			buttonOrderBuy1.Size = new Size(303, 101);
@@ -101,7 +101,7 @@
 			// 
 			// textBoxSlDistance
 			// 
-			textBoxSlDistance.Location = new Point(195, 164);
+			textBoxSlDistance.Location = new Point(192, 164);
 			textBoxSlDistance.Margin = new Padding(4, 5, 4, 5);
 			textBoxSlDistance.Name = "textBoxSlDistance";
 			textBoxSlDistance.Size = new Size(157, 39);
@@ -110,7 +110,7 @@
 			// LabelPositionSize
 			// 
 			LabelPositionSize.AutoSize = true;
-			LabelPositionSize.Location = new Point(29, 165);
+			LabelPositionSize.Location = new Point(26, 165);
 			LabelPositionSize.Margin = new Padding(4, 0, 4, 0);
 			LabelPositionSize.Name = "LabelPositionSize";
 			LabelPositionSize.Size = new Size(133, 32);
@@ -119,7 +119,7 @@
 			// 
 			// buttonSlUp
 			// 
-			buttonSlUp.Location = new Point(880, 440);
+			buttonSlUp.Location = new Point(877, 440);
 			buttonSlUp.Margin = new Padding(4, 5, 4, 5);
 			buttonSlUp.Name = "buttonSlUp";
 			buttonSlUp.Size = new Size(211, 101);
@@ -130,7 +130,7 @@
 			// 
 			// buttonSlDown
 			// 
-			buttonSlDown.Location = new Point(880, 549);
+			buttonSlDown.Location = new Point(877, 549);
 			buttonSlDown.Margin = new Padding(4, 5, 4, 5);
 			buttonSlDown.Name = "buttonSlDown";
 			buttonSlDown.Size = new Size(211, 100);
@@ -141,7 +141,7 @@
 			// 
 			// buttonJoinSl
 			// 
-			buttonJoinSl.Location = new Point(880, 660);
+			buttonJoinSl.Location = new Point(877, 660);
 			buttonJoinSl.Margin = new Padding(4, 5, 4, 5);
 			buttonJoinSl.Name = "buttonJoinSl";
 			buttonJoinSl.Size = new Size(208, 101);
@@ -152,7 +152,7 @@
 			// 
 			// buttonSlUpMini
 			// 
-			buttonSlUpMini.Location = new Point(1096, 440);
+			buttonSlUpMini.Location = new Point(1093, 440);
 			buttonSlUpMini.Margin = new Padding(4, 5, 4, 5);
 			buttonSlUpMini.Name = "buttonSlUpMini";
 			buttonSlUpMini.Size = new Size(208, 101);
@@ -163,7 +163,7 @@
 			// 
 			// buttonSlDownMini
 			// 
-			buttonSlDownMini.Location = new Point(1096, 549);
+			buttonSlDownMini.Location = new Point(1093, 549);
 			buttonSlDownMini.Margin = new Padding(4, 5, 4, 5);
 			buttonSlDownMini.Name = "buttonSlDownMini";
 			buttonSlDownMini.Size = new Size(208, 101);
@@ -175,7 +175,7 @@
 			// checkBoxAlwaysOnTop
 			// 
 			checkBoxAlwaysOnTop.AutoSize = true;
-			checkBoxAlwaysOnTop.Location = new Point(1099, 164);
+			checkBoxAlwaysOnTop.Location = new Point(1096, 164);
 			checkBoxAlwaysOnTop.Margin = new Padding(4, 5, 4, 5);
 			checkBoxAlwaysOnTop.Name = "checkBoxAlwaysOnTop";
 			checkBoxAlwaysOnTop.Size = new Size(196, 36);
@@ -186,7 +186,7 @@
 			// 
 			// buttonOrderSell1
 			// 
-			buttonOrderSell1.Location = new Point(342, 835);
+			buttonOrderSell1.Location = new Point(339, 835);
 			buttonOrderSell1.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderSell1.Name = "buttonOrderSell1";
 			buttonOrderSell1.Size = new Size(303, 101);
@@ -197,7 +197,7 @@
 			// 
 			// buttonBuy60
 			// 
-			buttonBuy60.Location = new Point(35, 507);
+			buttonBuy60.Location = new Point(32, 507);
 			buttonBuy60.Margin = new Padding(4, 5, 4, 5);
 			buttonBuy60.Name = "buttonBuy60";
 			buttonBuy60.Size = new Size(303, 101);
@@ -208,7 +208,7 @@
 			// 
 			// buttonBuy30
 			// 
-			buttonBuy30.Location = new Point(35, 613);
+			buttonBuy30.Location = new Point(32, 613);
 			buttonBuy30.Margin = new Padding(4, 5, 4, 5);
 			buttonBuy30.Name = "buttonBuy30";
 			buttonBuy30.Size = new Size(303, 101);
@@ -219,7 +219,7 @@
 			// 
 			// buttonBuy10
 			// 
-			buttonBuy10.Location = new Point(35, 723);
+			buttonBuy10.Location = new Point(32, 723);
 			buttonBuy10.Margin = new Padding(4, 5, 4, 5);
 			buttonBuy10.Name = "buttonBuy10";
 			buttonBuy10.Size = new Size(303, 101);
@@ -230,7 +230,7 @@
 			// 
 			// buttonBuy100
 			// 
-			buttonBuy100.Location = new Point(35, 398);
+			buttonBuy100.Location = new Point(32, 398);
 			buttonBuy100.Margin = new Padding(4, 5, 4, 5);
 			buttonBuy100.Name = "buttonBuy100";
 			buttonBuy100.Size = new Size(303, 101);
@@ -241,7 +241,7 @@
 			// 
 			// buttonSell100
 			// 
-			buttonSell100.Location = new Point(342, 398);
+			buttonSell100.Location = new Point(339, 398);
 			buttonSell100.Margin = new Padding(4, 5, 4, 5);
 			buttonSell100.Name = "buttonSell100";
 			buttonSell100.Size = new Size(303, 101);
@@ -252,7 +252,7 @@
 			// 
 			// buttonSell60
 			// 
-			buttonSell60.Location = new Point(342, 507);
+			buttonSell60.Location = new Point(339, 507);
 			buttonSell60.Margin = new Padding(4, 5, 4, 5);
 			buttonSell60.Name = "buttonSell60";
 			buttonSell60.Size = new Size(303, 101);
@@ -263,7 +263,7 @@
 			// 
 			// buttonSell30
 			// 
-			buttonSell30.Location = new Point(342, 613);
+			buttonSell30.Location = new Point(339, 613);
 			buttonSell30.Margin = new Padding(4, 5, 4, 5);
 			buttonSell30.Name = "buttonSell30";
 			buttonSell30.Size = new Size(303, 101);
@@ -274,7 +274,7 @@
 			// 
 			// buttonSell10
 			// 
-			buttonSell10.Location = new Point(342, 723);
+			buttonSell10.Location = new Point(339, 723);
 			buttonSell10.Margin = new Padding(4, 5, 4, 5);
 			buttonSell10.Name = "buttonSell10";
 			buttonSell10.Size = new Size(303, 101);
@@ -287,7 +287,7 @@
 			// 
 			labelConnected.AutoSize = true;
 			labelConnected.Font = new Font("Microsoft Sans Serif", 11F, FontStyle.Bold, GraphicsUnit.Point, 238);
-			labelConnected.Location = new Point(1135, 13);
+			labelConnected.Location = new Point(1132, 13);
 			labelConnected.Margin = new Padding(4, 0, 4, 0);
 			labelConnected.Name = "labelConnected";
 			labelConnected.Size = new Size(145, 36);
@@ -297,7 +297,7 @@
 			// 
 			// buttonOrderBuy2
 			// 
-			buttonOrderBuy2.Location = new Point(35, 1060);
+			buttonOrderBuy2.Location = new Point(32, 1060);
 			buttonOrderBuy2.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderBuy2.Name = "buttonOrderBuy2";
 			buttonOrderBuy2.Size = new Size(303, 101);
@@ -308,7 +308,7 @@
 			// 
 			// buttonOrderSell2
 			// 
-			buttonOrderSell2.Location = new Point(342, 1060);
+			buttonOrderSell2.Location = new Point(339, 1060);
 			buttonOrderSell2.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderSell2.Name = "buttonOrderSell2";
 			buttonOrderSell2.Size = new Size(308, 101);
@@ -319,10 +319,10 @@
 			// 
 			// buttonCloseAll
 			// 
-			buttonCloseAll.Location = new Point(1099, 660);
+			buttonCloseAll.Location = new Point(1096, 660);
 			buttonCloseAll.Margin = new Padding(4, 5, 4, 5);
 			buttonCloseAll.Name = "buttonCloseAll";
-			buttonCloseAll.Size = new Size(212, 101);
+			buttonCloseAll.Size = new Size(205, 101);
 			buttonCloseAll.TabIndex = 80;
 			buttonCloseAll.Text = "Close All";
 			buttonCloseAll.UseVisualStyleBackColor = true;
@@ -330,7 +330,7 @@
 			// 
 			// buttonSlDownMax
 			// 
-			buttonSlDownMax.Location = new Point(659, 549);
+			buttonSlDownMax.Location = new Point(656, 549);
 			buttonSlDownMax.Margin = new Padding(4, 5, 4, 5);
 			buttonSlDownMax.Name = "buttonSlDownMax";
 			buttonSlDownMax.Size = new Size(212, 101);
@@ -341,7 +341,7 @@
 			// 
 			// buttonSlUpMax
 			// 
-			buttonSlUpMax.Location = new Point(659, 440);
+			buttonSlUpMax.Location = new Point(656, 440);
 			buttonSlUpMax.Margin = new Padding(4, 5, 4, 5);
 			buttonSlUpMax.Name = "buttonSlUpMax";
 			buttonSlUpMax.Size = new Size(212, 101);
@@ -353,7 +353,7 @@
 			// labelRrr
 			// 
 			labelRrr.AutoSize = true;
-			labelRrr.Location = new Point(29, 13);
+			labelRrr.Location = new Point(26, 13);
 			labelRrr.Margin = new Padding(4, 0, 4, 0);
 			labelRrr.Name = "labelRrr";
 			labelRrr.Size = new Size(56, 32);
@@ -369,7 +369,7 @@
 			// labelLoss
 			// 
 			labelLoss.AutoSize = true;
-			labelLoss.Location = new Point(399, 13);
+			labelLoss.Location = new Point(396, 13);
 			labelLoss.Margin = new Padding(4, 0, 4, 0);
 			labelLoss.Name = "labelLoss";
 			labelLoss.Size = new Size(59, 32);
@@ -379,7 +379,7 @@
 			// labelProfit
 			// 
 			labelProfit.AutoSize = true;
-			labelProfit.Location = new Point(766, 13);
+			labelProfit.Location = new Point(763, 13);
 			labelProfit.Margin = new Padding(4, 0, 4, 0);
 			labelProfit.Name = "labelProfit";
 			labelProfit.Size = new Size(71, 32);
@@ -388,7 +388,7 @@
 			// 
 			// buttonOrderSell3
 			// 
-			buttonOrderSell3.Location = new Point(342, 947);
+			buttonOrderSell3.Location = new Point(339, 947);
 			buttonOrderSell3.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderSell3.Name = "buttonOrderSell3";
 			buttonOrderSell3.Size = new Size(303, 101);
@@ -399,7 +399,7 @@
 			// 
 			// buttonOrderBuy3
 			// 
-			buttonOrderBuy3.Location = new Point(35, 947);
+			buttonOrderBuy3.Location = new Point(32, 947);
 			buttonOrderBuy3.Margin = new Padding(4, 5, 4, 5);
 			buttonOrderBuy3.Name = "buttonOrderBuy3";
 			buttonOrderBuy3.Size = new Size(303, 101);
@@ -411,7 +411,7 @@
 			// labelPrice
 			// 
 			labelPrice.AutoSize = true;
-			labelPrice.Location = new Point(29, 216);
+			labelPrice.Location = new Point(26, 216);
 			labelPrice.Margin = new Padding(4, 0, 4, 0);
 			labelPrice.Name = "labelPrice";
 			labelPrice.Size = new Size(65, 32);
@@ -420,7 +420,7 @@
 			// 
 			// textBoxPrice
 			// 
-			textBoxPrice.Location = new Point(195, 211);
+			textBoxPrice.Location = new Point(192, 211);
 			textBoxPrice.Margin = new Padding(4, 5, 4, 5);
 			textBoxPrice.Name = "textBoxPrice";
 			textBoxPrice.Size = new Size(157, 39);
@@ -429,7 +429,7 @@
 			// checkBoxPendingOrder
 			// 
 			checkBoxPendingOrder.AutoSize = true;
-			checkBoxPendingOrder.Location = new Point(1099, 211);
+			checkBoxPendingOrder.Location = new Point(1096, 211);
 			checkBoxPendingOrder.Margin = new Padding(4, 5, 4, 5);
 			checkBoxPendingOrder.Name = "checkBoxPendingOrder";
 			checkBoxPendingOrder.Size = new Size(197, 36);
@@ -441,7 +441,7 @@
 			// checkBoxMovePendingOrder
 			// 
 			checkBoxMovePendingOrder.AutoSize = true;
-			checkBoxMovePendingOrder.Location = new Point(954, 394);
+			checkBoxMovePendingOrder.Location = new Point(951, 394);
 			checkBoxMovePendingOrder.Margin = new Padding(4, 5, 4, 5);
 			checkBoxMovePendingOrder.Name = "checkBoxMovePendingOrder";
 			checkBoxMovePendingOrder.Size = new Size(346, 36);
@@ -451,7 +451,7 @@
 			// 
 			// buttonSetTp
 			// 
-			buttonSetTp.Location = new Point(659, 660);
+			buttonSetTp.Location = new Point(656, 660);
 			buttonSetTp.Margin = new Padding(4, 5, 4, 5);
 			buttonSetTp.Name = "buttonSetTp";
 			buttonSetTp.Size = new Size(212, 101);
@@ -463,7 +463,7 @@
 			// trackBarPositionUsing
 			// 
 			trackBarPositionUsing.LargeChange = 50;
-			trackBarPositionUsing.Location = new Point(195, 262);
+			trackBarPositionUsing.Location = new Point(192, 262);
 			trackBarPositionUsing.Margin = new Padding(4, 5, 4, 5);
 			trackBarPositionUsing.Maximum = 300;
 			trackBarPositionUsing.Minimum = 10;
@@ -477,7 +477,7 @@
 			// labelPositionUsing
 			// 
 			labelPositionUsing.AutoSize = true;
-			labelPositionUsing.Location = new Point(30, 275);
+			labelPositionUsing.Location = new Point(27, 275);
 			labelPositionUsing.Margin = new Padding(4, 0, 4, 0);
 			labelPositionUsing.Name = "labelPositionUsing";
 			labelPositionUsing.Size = new Size(167, 32);
@@ -487,7 +487,7 @@
 			// labelPositionUsingPercent
 			// 
 			labelPositionUsingPercent.AutoSize = true;
-			labelPositionUsingPercent.Location = new Point(66, 320);
+			labelPositionUsingPercent.Location = new Point(63, 320);
 			labelPositionUsingPercent.Margin = new Padding(4, 0, 4, 0);
 			labelPositionUsingPercent.Name = "labelPositionUsingPercent";
 			labelPositionUsingPercent.Size = new Size(73, 32);
@@ -497,7 +497,7 @@
 			// labelSlLoss
 			// 
 			labelSlLoss.AutoSize = true;
-			labelSlLoss.Location = new Point(29, 61);
+			labelSlLoss.Location = new Point(26, 61);
 			labelSlLoss.Margin = new Padding(4, 0, 4, 0);
 			labelSlLoss.Name = "labelSlLoss";
 			labelSlLoss.Size = new Size(71, 32);
@@ -506,7 +506,7 @@
 			// 
 			// buttonSlToBeAutomation
 			// 
-			buttonSlToBeAutomation.Location = new Point(659, 942);
+			buttonSlToBeAutomation.Location = new Point(656, 942);
 			buttonSlToBeAutomation.Margin = new Padding(4, 5, 4, 5);
 			buttonSlToBeAutomation.Name = "buttonSlToBeAutomation";
 			buttonSlToBeAutomation.Size = new Size(641, 74);
@@ -517,7 +517,7 @@
 			// 
 			// progressBarSlToBeAutomation
 			// 
-			progressBarSlToBeAutomation.Location = new Point(664, 1027);
+			progressBarSlToBeAutomation.Location = new Point(661, 1027);
 			progressBarSlToBeAutomation.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlToBeAutomation.Name = "progressBarSlToBeAutomation";
 			progressBarSlToBeAutomation.Size = new Size(636, 61);
@@ -525,7 +525,7 @@
 			// 
 			// buttonSlPtMonitoring
 			// 
-			buttonSlPtMonitoring.Location = new Point(659, 1254);
+			buttonSlPtMonitoring.Location = new Point(656, 1254);
 			buttonSlPtMonitoring.Margin = new Padding(4, 5, 4, 5);
 			buttonSlPtMonitoring.Name = "buttonSlPtMonitoring";
 			buttonSlPtMonitoring.Size = new Size(646, 74);
@@ -536,7 +536,7 @@
 			// 
 			// progressBarSlPtMonitoring
 			// 
-			progressBarSlPtMonitoring.Location = new Point(664, 1337);
+			progressBarSlPtMonitoring.Location = new Point(661, 1337);
 			progressBarSlPtMonitoring.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlPtMonitoring.Name = "progressBarSlPtMonitoring";
 			progressBarSlPtMonitoring.Size = new Size(636, 61);
@@ -544,7 +544,7 @@
 			// 
 			// buttonEquity
 			// 
-			buttonEquity.Location = new Point(871, 162);
+			buttonEquity.Location = new Point(868, 162);
 			buttonEquity.Margin = new Padding(4, 5, 4, 5);
 			buttonEquity.Name = "buttonEquity";
 			buttonEquity.Size = new Size(208, 88);
@@ -557,7 +557,7 @@
 			// 
 			labelSymbol.Font = new Font("Microsoft Sans Serif", 25F, FontStyle.Regular, GraphicsUnit.Point, 238);
 			labelSymbol.ForeColor = Color.Blue;
-			labelSymbol.Location = new Point(390, 164);
+			labelSymbol.Location = new Point(387, 164);
 			labelSymbol.Margin = new Padding(4, 0, 4, 0);
 			labelSymbol.Name = "labelSymbol";
 			labelSymbol.Size = new Size(465, 109);
@@ -567,7 +567,7 @@
 			// checkBoxBlink
 			// 
 			checkBoxBlink.AutoSize = true;
-			checkBoxBlink.Location = new Point(664, 889);
+			checkBoxBlink.Location = new Point(661, 889);
 			checkBoxBlink.Margin = new Padding(5, 8, 5, 8);
 			checkBoxBlink.Name = "checkBoxBlink";
 			checkBoxBlink.Size = new Size(237, 36);
@@ -577,7 +577,7 @@
 			// 
 			// progressBarSlToHalfAutomation
 			// 
-			progressBarSlToHalfAutomation.Location = new Point(664, 1182);
+			progressBarSlToHalfAutomation.Location = new Point(661, 1182);
 			progressBarSlToHalfAutomation.Margin = new Padding(4, 5, 4, 5);
 			progressBarSlToHalfAutomation.Name = "progressBarSlToHalfAutomation";
 			progressBarSlToHalfAutomation.Size = new Size(636, 61);
@@ -585,7 +585,7 @@
 			// 
 			// buttonSlToHalfAutomation
 			// 
-			buttonSlToHalfAutomation.Location = new Point(659, 1095);
+			buttonSlToHalfAutomation.Location = new Point(656, 1095);
 			buttonSlToHalfAutomation.Margin = new Padding(4, 5, 4, 5);
 			buttonSlToHalfAutomation.Name = "buttonSlToHalfAutomation";
 			buttonSlToHalfAutomation.Size = new Size(641, 74);
@@ -596,7 +596,7 @@
 			// 
 			// buttonCallHueTest
 			// 
-			buttonCallHueTest.Location = new Point(35, 1306);
+			buttonCallHueTest.Location = new Point(32, 1306);
 			buttonCallHueTest.Name = "buttonCallHueTest";
 			buttonCallHueTest.Size = new Size(300, 92);
 			buttonCallHueTest.TabIndex = 94;
@@ -607,7 +607,7 @@
 			// labelPs
 			// 
 			labelPs.AutoSize = true;
-			labelPs.Location = new Point(30, 110);
+			labelPs.Location = new Point(27, 110);
 			labelPs.Margin = new Padding(4, 0, 4, 0);
 			labelPs.Name = "labelPs";
 			labelPs.Size = new Size(145, 32);
@@ -617,7 +617,7 @@
 			// labelTickValue
 			// 
 			labelTickValue.AutoSize = true;
-			labelTickValue.Location = new Point(399, 110);
+			labelTickValue.Location = new Point(396, 110);
 			labelTickValue.Margin = new Padding(4, 0, 4, 0);
 			labelTickValue.Name = "labelTickValue";
 			labelTickValue.Size = new Size(120, 32);
@@ -627,7 +627,7 @@
 			// labelUsdCzk
 			// 
 			labelUsdCzk.AutoSize = true;
-			labelUsdCzk.Location = new Point(766, 110);
+			labelUsdCzk.Location = new Point(763, 110);
 			labelUsdCzk.Margin = new Padding(4, 0, 4, 0);
 			labelUsdCzk.Name = "labelUsdCzk";
 			labelUsdCzk.Size = new Size(103, 32);
@@ -637,7 +637,7 @@
 			// labelContractSize
 			// 
 			labelContractSize.AutoSize = true;
-			labelContractSize.Location = new Point(1071, 110);
+			labelContractSize.Location = new Point(1068, 110);
 			labelContractSize.Margin = new Padding(4, 0, 4, 0);
 			labelContractSize.Name = "labelContractSize";
 			labelContractSize.Size = new Size(154, 32);
@@ -646,7 +646,7 @@
 			// 
 			// buttonSetTp15
 			// 
-			buttonSetTp15.Location = new Point(659, 769);
+			buttonSetTp15.Location = new Point(656, 769);
 			buttonSetTp15.Margin = new Padding(4, 5, 4, 5);
 			buttonSetTp15.Name = "buttonSetTp15";
 			buttonSetTp15.Size = new Size(212, 101);
@@ -658,7 +658,7 @@
 			// checkBoxAutoCloseTrades
 			// 
 			checkBoxAutoCloseTrades.AutoSize = true;
-			checkBoxAutoCloseTrades.Location = new Point(1074, 774);
+			checkBoxAutoCloseTrades.Location = new Point(1064, 774);
 			checkBoxAutoCloseTrades.Margin = new Padding(5, 8, 5, 8);
 			checkBoxAutoCloseTrades.Name = "checkBoxAutoCloseTrades";
 			checkBoxAutoCloseTrades.Size = new Size(230, 36);
