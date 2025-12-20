@@ -456,7 +456,7 @@ namespace Mt4Api
 			return orders;
 		}
 
-		public Orders GetPendingOrders()
+		public Orders GetPendingOrders(bool allOrders = false)
 		{
 			Orders orders = new Orders();
 			List<MtOrder> mtOrders = apiClient.GetOrders(OrderSelectSource.MODE_TRADES);
@@ -475,7 +475,7 @@ namespace Mt4Api
 					order.SL = mtOrder.StopLoss;
 					order.Magic = (ulong)mtOrder.MagicNumber;
 					order.Comment = mtOrder.Comment;
-					if (Utilities.StrategyNumber == order.Magic && order.Instrument == Symbol)
+					if (Utilities.StrategyNumber == order.Magic && (order.Instrument == Symbol || allOrders))
 					{
 						orders.Add(order);
 					}

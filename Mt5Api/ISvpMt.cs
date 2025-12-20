@@ -21,7 +21,7 @@ namespace Mt5Api
 		int SymbolLotStepDigits();
 		int SymbolDigits();
 		Orders GetMarketOrders(bool allOrders = false);
-		Orders GetPendingOrders();
+		Orders GetPendingOrders(bool allOrders = false);
 		ulong CreatePendingOrderSlPtPercent(double price, double units, double slPercent, double ptPercent);
 		ulong CreateMarketOrderSlPtPercent(double units, double slPercent, double ptPercent);
 		void ModifyPendingOrder(Order order);

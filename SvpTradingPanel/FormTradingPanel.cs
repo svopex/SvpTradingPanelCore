@@ -870,16 +870,16 @@ namespace SvpTradingPanel
 			}
 		}
 
-		private void closeAll()
+		private void closeAll(bool allOrders)
 		{
 			SlToBeAutomation = false;
 
-			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+			Orders orders = MetatraderInstance.Instance.GetMarketOrders(allOrders);
 			foreach (var order in orders)
 			{
 				MetatraderInstance.Instance.CloseMarketOrder(order.Id);
 			}
-			orders = MetatraderInstance.Instance.GetPendingOrders();
+			orders = MetatraderInstance.Instance.GetPendingOrders(allOrders);
 			foreach (var order in orders)
 			{
 				MetatraderInstance.Instance.ClosePendingOrder(order.Id);
@@ -892,7 +892,7 @@ namespace SvpTradingPanel
 			DialogResult dialogResult = MessageBox.Show("Do you really close all orders?", "SvpTradePanel", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
 			if (dialogResult == DialogResult.Yes)
 			{
-				closeAll();
+				closeAll(false);
 			}
 		}
 
@@ -1233,7 +1233,7 @@ namespace SvpTradingPanel
 								// spustit pouze pokud to ještě nebylo v této minutě spuštěno
 								if (autoCloseTradesLastTriggeredMinute != now.Minute)
 								{
-									closeAll();
+									closeAll(true);
 									autoCloseTradesLastTriggeredMinute = now.Minute;
 								}
 							}

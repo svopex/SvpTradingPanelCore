@@ -462,7 +462,7 @@ namespace Mt5Api
 			return order;
 		}
 
-		public Orders GetPendingOrders()
+		public Orders GetPendingOrders(bool allOrders = false)
 		{
 			Orders Orders = new Orders();
 
@@ -473,7 +473,7 @@ namespace Mt5Api
 
 				Order order = GetPendingOrder(ticket);
 
-				if (Utilities.StrategyNumber == order.Magic && order.Instrument == TransformInstrument(Symbol))
+				if (Utilities.StrategyNumber == order.Magic && (order.Instrument == TransformInstrument(Symbol) || allOrders))
 				{
 					order.Instrument = DeTransformInstrument(order.Instrument);
 					Orders.Add(order);
@@ -652,7 +652,7 @@ namespace Mt5Api
 			return Order;
 		}
 
-		public Orders GetMarketOrders(bool allOrders)
+		public Orders GetMarketOrders(bool allOrders = false)
 		{
 			Orders Orders = new Orders();
 
