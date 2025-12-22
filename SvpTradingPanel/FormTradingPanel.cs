@@ -1028,7 +1028,7 @@ namespace SvpTradingPanel
 					{
 						return;
 					}
-					var body = "This is the body of the request.";
+					var body = "Trades close after 10:30 p.m.";
 					var content = new StringContent(body);
 					var response = client.PostAsync(url, content).GetAwaiter().GetResult();
 				}
