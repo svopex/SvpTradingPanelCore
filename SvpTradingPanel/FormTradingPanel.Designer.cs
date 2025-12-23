@@ -598,7 +598,7 @@
 			// 
 			buttonCallHueTest.Location = new Point(10, 1236);
 			buttonCallHueTest.Name = "buttonCallHueTest";
-			buttonCallHueTest.Size = new Size(456, 92);
+			buttonCallHueTest.Size = new Size(213, 92);
 			buttonCallHueTest.TabIndex = 94;
 			buttonCallHueTest.Text = "Call Hue Test";
 			buttonCallHueTest.UseVisualStyleBackColor = true;
