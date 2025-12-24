@@ -40,6 +40,20 @@ namespace SvpTradingPanel
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 		}
 
+		// Metoda na získání času buildu EXE souboru
+		private DateTime GetBuildDateTime()
+		{
+			try
+			{
+				string exePath = Application.ExecutablePath;
+				return System.IO.File.GetLastWriteTime(exePath);
+			}
+			catch
+			{
+				return DateTime.MinValue;
+			}
+		}
+
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
@@ -1265,10 +1279,10 @@ namespace SvpTradingPanel
 
 						SlAutomation();
 
-						if (this.Text == "SvpTradingPanel")
+						if (this.labelSvpTradingPanel.Text == "...")
 						{
 							string currency = MetatraderInstance.Instance.AccountCurrency();
-							this.Text = "STP Core: "
+							this.labelSvpTradingPanel.Text = "SvpTradingPanel Core: "
 								+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
 								+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
 								+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
@@ -1277,6 +1291,9 @@ namespace SvpTradingPanel
 								+ Utilities.BrokerMarginEquityCoefficient + "x, "
 								+ Utilities.TrackBarPositionUsing + "%, "
 								+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
+
+							string buildDateTime = GetBuildDateTime().ToString("dd.MM.yyyy HH:mm");
+							this.Text = "SvpTradingPanel Core (" + buildDateTime + ")";
 						}
 
 						BlinkOnEvening();
