@@ -681,7 +681,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(13F, 32F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(1000, 1495);
+			ClientSize = new Size(1000, 1379);
 			Controls.Add(labelSvpTradingPanel);
 			Controls.Add(checkBoxAutoCloseTrades);
 			Controls.Add(buttonSetTp15);
