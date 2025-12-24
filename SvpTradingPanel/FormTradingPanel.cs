@@ -67,6 +67,9 @@ namespace SvpTradingPanel
 			{
 				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
 			}
+
+			this.Left = 0;
+			this.Top = 150;
 		}
 
 		private void RefreshLabelSlLoss()
