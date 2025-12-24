@@ -1282,7 +1282,7 @@ namespace SvpTradingPanel
 						if (this.labelSvpTradingPanel.Text == "...")
 						{
 							string currency = MetatraderInstance.Instance.AccountCurrency();
-							this.labelSvpTradingPanel.Text = "SvpTradingPanel Core: "
+							this.labelSvpTradingPanel.Text = "Settings: "
 								+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
 								+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
 								+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
