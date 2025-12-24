@@ -1285,11 +1285,12 @@ namespace SvpTradingPanel
 						if (this.labelSvpTradingPanel.Text == "...")
 						{
 							string currency = MetatraderInstance.Instance.AccountCurrency();
+                            double accountEquity = MetatraderInstance.Instance.AccountEquity();
 							this.labelSvpTradingPanel.Text = "Settings: "
 								+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
 								+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
 								+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
-								+ ", " + (Utilities.AccountEquity == 0 ? String.Empty : Utilities.AccountEquity + " " + currency + ", ")
+								+ ", " + (Utilities.AccountEquity == 0 ? accountEquity.ToString("F2") + " " + currency + ", " : Utilities.AccountEquity + " " + currency + ", ")
 								+ Utilities.RiskToTrade * 100 + "%, "
 								+ Utilities.BrokerMarginEquityCoefficient + "x, "
 								+ Utilities.TrackBarPositionUsing + "%, "
