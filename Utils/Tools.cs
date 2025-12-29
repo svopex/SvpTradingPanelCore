@@ -19,12 +19,12 @@ namespace Utils
 		SvpTradingPanel - strategy name
 		0 - account equity, pokud je 0, tak se bere equity value od brokera
 		0.01 - risk to trade, pokud je 0, tak se bere 1% equity, 0.01 = 1%
-		1 - broker margin equity coefficient, pokud je 1, tak se bere realna hodnota equity, jinak se vynasobi s hodnotou equity, pouziva se, pokud chi velkou paku a u brokera mit mene penez
+		1 - broker margin equity coefficient, pokud je 1, tak se bere realna hodnota equity, jinak se vynasobi s hodnotou equity, pouziva se, pokud chci velkou paku a u brokera mit mene penez
 		100 - track bar position using, kolik beru z pozice, 100 = 100%, 50 = 50%, 2000 = 200%
 		0 - tick value compensation, pokud je 1, pozice se nasobi kurzem USDCZK, protoze vypocet pak napriklad u PurpleTrading chodi spatne
 			Doporucene hodnoty:
-				PurpleTrading = 1
 				FTMO = 0
+				PurpleTrading = 1				
 		*/
 
 		public static bool TickValueCompensation
