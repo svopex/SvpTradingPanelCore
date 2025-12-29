@@ -157,10 +157,16 @@ namespace Mt5Api
 			return (int)apiClient.SymbolInfoInteger(Symbol, ENUM_SYMBOL_INFO_INTEGER.SYMBOL_DIGITS);
 		}
 
-		public double GetActualPrice(string symbol = null)
+		public double GetActualAskPrice(string symbol = null)
 		{
 			apiClient.SymbolInfoTick(symbol ?? Symbol, out MtApi5.MqlTick tick);
 			return tick.ask;
+		}
+
+		public double GetActualBidPrice(string symbol = null)
+		{
+			apiClient.SymbolInfoTick(symbol ?? Symbol, out MtApi5.MqlTick tick);
+			return tick.bid;
 		}
 
 		public bool SymbolSelect(string instrument, bool selected)

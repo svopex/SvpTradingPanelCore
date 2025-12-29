@@ -153,7 +153,7 @@ namespace SvpTradingPanel
 			{
 				if (checkBoxPendingOrder.Checked)
 				{
-					double actualPrice = MetatraderInstance.Instance.GetActualPrice();
+					double actualPrice = MetatraderInstance.Instance.GetActualAskPrice();
 
 					// Pending order vytvor v idealni vzdalenosti od ceny, pokud cena neni zadana.
 					if (buy)
@@ -248,7 +248,7 @@ namespace SvpTradingPanel
 		{
 			if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
 			{
-				return MetatraderInstance.Instance.GetActualPrice(MetatraderInstance.Instance.SymbolName("USDCZK"));
+				return MetatraderInstance.Instance.GetActualBidPrice(MetatraderInstance.Instance.SymbolName("USDCZK"));
 			}
 			else
 			{

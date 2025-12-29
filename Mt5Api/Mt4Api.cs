@@ -132,14 +132,20 @@ namespace Mt4Api
 			return (int)apiClient.SymbolInfoInteger(Symbol, EnumSymbolInfoInteger.SYMBOL_DIGITS);
 		}
 
-		public double GetActualPrice(string? symbol = null)
+		public double GetActualAskPrice(string? symbol = null)
 		{
 			MtApi.MqlTick tick = apiClient.SymbolInfoTick(Symbol);
 			return tick.Ask;
 		}
 
-		public bool CloseMarketOrder(long orderId)
+		public double GetActualBidPrice(string? symbol = null)
 		{
+    		MtApi.MqlTick tick = apiClient.SymbolInfoTick(Symbol);
+			return tick.Bid;
+		}
+
+		public bool CloseMarketOrder(long orderId)
+  		{
 			return apiClient.OrderClose((int)orderId, slippage);
 		}
 

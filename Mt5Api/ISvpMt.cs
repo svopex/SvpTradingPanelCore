@@ -15,7 +15,8 @@ namespace Mt5Api
 		double AccountEquity();
 		double SymbolPoint();
 		double SymbolTradeTickValue();
-		double GetActualPrice(string? symbol = null);
+		double GetActualAskPrice(string? symbol = null);
+		double GetActualBidPrice(string? symbol = null);
 		double SymbolMinLot();
 		double SymbolLotStep();
 		int SymbolLotStepDigits();
