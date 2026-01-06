@@ -210,6 +210,7 @@ namespace SvpTradingPanel
 			this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
 			textBoxYear.Text = DateTime.Now.Year.ToString();
+			textBoxYear.Text = "";
 
 			RefreshData();
 
