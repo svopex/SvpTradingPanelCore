@@ -42,7 +42,6 @@ namespace SvpTradingPanel
 			this.Height = 350;
 			this.TopMost = true;
 			this.KeyPreview = true;
-			this.KeyDown += ConfirmDialog_KeyDown;
 			this.FormBorderStyle = FormBorderStyle.FixedDialog;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;

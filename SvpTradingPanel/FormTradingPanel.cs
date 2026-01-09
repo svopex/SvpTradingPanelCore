@@ -18,1134 +18,1161 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace SvpTradingPanel
 {
-	public partial class FormTradingPanel : Form
-	{
-		private const int SlToBeAutomationProgressIncrementConstant = 20;
-		private bool SlToBeAutomation { get; set; }
-		private Orders SlToBeAutomationOrders { get; set; } = new Orders();
-
-		private enum SlTypeEnum
-		{
-			Monitoring,
-			BreakEven,
-			Half
-		}
-
-		private SlTypeEnum SlToBeAutomationType { get; set; }
-
-		public FormTradingPanel()
-		{
-			InitializeComponent();
-
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-		}
-
-		// Metoda na získání času buildu EXE souboru
-		private DateTime GetBuildDateTime()
-		{
-			try
-			{
-				string exePath = Application.ExecutablePath;
-				return System.IO.File.GetLastWriteTime(exePath);
-			}
-			catch
-			{
-				return DateTime.MinValue;
-			}
-		}
-
-		protected override void OnLoad(EventArgs e)
-		{
-			base.OnLoad(e);
-
-			// Např. zmenší celý formulář na 80 % původní velikosti
-			float scaleFactor = 0.8f;
-			this.Scale(new SizeF(scaleFactor, scaleFactor));
-
-			// Volitelné: aby i fonty odpovídaly
-			foreach (Control c in this.Controls)
-			{
-				c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
-			}
-
-			this.Left = 0;
-			this.Top = 150;
-		}
-
-		private void RefreshLabelSlLoss()
-		{
-			if (MetatraderInstance.Instance != null)
-			{
-				string currency = MetatraderInstance.Instance.AccountCurrency();
-				if (currency != null)
-				{
-					// labelSlLoss.Text = "Full SL loss: " + Math.Round(RiskValue() * GetTrackBarPositionUsingPercent() / 100, 2) + " " + currency;
-
-					double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
-					double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
-					bool result;
-					double slPtDistance;
-					(result, slPtDistance) = GetSlPtDistance(true);
-					if (result)
-					{
-						if (IsForex(MetatraderInstance.Instance.Symbol))
-						{
-							labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv, 2) + " " + currency;
-						}
-						else
-						{
-							double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
-							labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv * course, 2) + " " + currency;
-						}
-					}
-					else
-					{
-						labelSlLoss.Text = "Full SL loss: 0 " + currency;
-					}
-				}
-			}
-		}
-
-		private void RefreshData(Orders orders)
-		{
-			string currency = MetatraderInstance.Instance.AccountCurrency();
-			var sumOfUnits = Math.Abs(orders.Select(x => x.Units).Sum());
-			var rrr = orders.Select(x => ((Math.Abs(x.OpenPrice - x.PT)) / (Math.Abs(x.OpenPrice - x.SL))) / sumOfUnits * Math.Abs(x.Units)).Sum();
-			var loss = orders.Select(x => Math.Abs(x.OpenPrice - x.SL) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
-			var profit = orders.Select(x => Math.Abs(x.OpenPrice - x.PT) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
-			if (!IsForex(MetatraderInstance.Instance.Symbol))
-			{
-				double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
-				loss = loss * course;
-				profit = profit * course;
-			}
-			labelRrr.Text = "RRR: " + Math.Round(rrr, 2);
-			labelLoss.Text = "Loss: " + Math.Round(loss, 2) + " " + currency;
-			labelProfit.Text = "Profit: " + Math.Round(profit, 2) + " " + currency;
-			double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
-			if (ps == 0)
-			{
-				ps = CalculatePosition(GetPositionSize(false) ?? 0, 1);
-			}
-			labelPs.Text = "Position size: " + Math.Round(Math.Abs(ps), 2);
-			double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
-			labelTickValue.Text = "Tick value: " + Math.Round(tv, 2);
-			if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
-			{
-				labelUsdCzk.Text = "USD/CZK: " + Math.Round(MainAccountCourse(), 2);
-			}
-			else
-			{
-				labelUsdCzk.Text = "USD/USD: " + Math.Round(MainAccountCourse(), 2);
-			}
-			labelContractSize.Text = "Contract size: " + MetatraderInstance.Instance.ContractSize();
-			RefreshLabelSlLoss();
-			labelSymbol.Text = MetatraderInstance.Instance.Symbol;
-		}
-
-		private double? GetPrice(bool buy)
-		{
-			if (Double.TryParse(textBoxPrice.Text, out double price))
-			{
-				return price;
-			}
-			else
-			{
-				if (checkBoxPendingOrder.Checked)
-				{
-					double actualPrice = MetatraderInstance.Instance.GetActualAskPrice();
-
-					// Pending order vytvor v idealni vzdalenosti od ceny, pokud cena neni zadana.
-					if (buy)
-					{
-						return actualPrice - (actualPrice * 0.01);
-					}
-					else
-					{
-						return actualPrice + (actualPrice * 0.01);
-					}
-				}
-				else
-				{
-					// Market order
-					return 0;
-				}
-			}
-		}
-
-		// Zaokrouhleni matematicky.
-		private double RoundPrice(double number)
-		{
-			int digits = MetatraderInstance.Instance.SymbolLotStepDigits();
-			double value = Math.Round(number, digits, MidpointRounding.AwayFromZero);
-			return value;
-		}
-
-		// Zaokrouhleni dolu - nepouzivam.
-		//private double RoundPrice(double number)
-		//{
-		//	int digits = MetatraderInstance.Instance.SymbolLotStepDigits();
-		//	double factor = Math.Pow(10, digits);
-		//	double value = Math.Floor(number * factor) / factor;
-		//	return value;
-		//}
-
-		private double RiskValue()
-		{
-			// na uctu mam pouze 1/4 toho, co chci obchodovat, kvuli mozne kradezi. Pouzivam paku.			
-			double accountEquity = Utilities.AccountEquity == 0 ? MetatraderInstance.Instance.AccountEquity() : Utilities.AccountEquity;
-			return accountEquity * Utilities.BrokerMarginEquityCoefficient * Utilities.RiskToTrade;
-		}
-
-		private (bool, double) GetSlPtDistance(bool buy)
-		{
-			Orders marketOrders = MetatraderInstance.Instance.GetMarketOrders();
-			Orders pendingOrders = MetatraderInstance.Instance.GetPendingOrders();
-			bool result =
-				(Double.TryParse(textBoxSlDistance.Text, out double positionSize) // Je validni velikost pozice v textboxu?
-				&& (positionSize * 0.1 > 0) // Je validni velikost pozice v textboxu?
-				&& ((IsPossibleBuy(marketOrders, pendingOrders) && buy) || (IsPossibleSell(marketOrders, pendingOrders) && !buy)) // Pokud je jiz otevrena pozice, nova pozice musi byt stejnejo typu (buy/sell).
-				);
-			return (result, positionSize);
-		}
-
-		bool IsForex(string? symbol)
-		{
-			if (string.IsNullOrWhiteSpace(symbol))
-				return false;
-
-			// Odstraní oddělovače
-			var clean = symbol.ToUpper().Replace("/", "").Replace(".", "");
-
-			// Ořízne na prvních 6 znaků (pokud je delší)
-			if (clean.Length > 6)
-				clean = clean.Substring(0, 6);
-
-			// Pokud po oříznutí není 6 znaků, není to platné
-			if (clean.Length != 6)
-				return false;
-
-			// Kontrola, zda jsou všechny znaky písmena A-Z
-			foreach (char c in clean)
-			{
-				if (c < 'A' || c > 'Z')
-					return false;
-			}
-
-			// ISO 4217 kódy měn
-			string[] iso4217 = {
-				"USD","EUR","JPY","GBP","AUD","CAD","CHF","NZD",
-				"SEK","NOK","DKK","PLN","CZK","HUF","ZAR","SGD","HKD"
-			};
-
-			string baseCurrency = clean.Substring(0, 3);
-			string quoteCurrency = clean.Substring(3, 3);
-
-			return iso4217.Contains(baseCurrency) && iso4217.Contains(quoteCurrency);
-		}
-
-		private double MainAccountCourse()
-		{
-			if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
-			{
-				return MetatraderInstance.Instance.GetActualBidPrice(MetatraderInstance.Instance.SymbolName("USDCZK"));
-			}
-			else
-			{
-				return 1;
-			}
-
-		}
-
-		private double? GetPositionSize(bool buy)
-		{
-			Orders marketOrders = MetatraderInstance.Instance.GetMarketOrders();
-			Orders pendingOrders = MetatraderInstance.Instance.GetPendingOrders();
-			bool result;
-			double slPtDistance;
-			(result, slPtDistance) = GetSlPtDistance(buy);
-			if (result)
-			{
-				// tick size misto velikosti pozice				
-				var symbolTradeTickValue = MetatraderInstance.Instance.SymbolTradeTickValue();
-
-				double positionSize;
-				if (IsForex(MetatraderInstance.Instance.Symbol))
-				{
-					positionSize = RiskValue() / (slPtDistance * symbolTradeTickValue);
-				}
-				else
-				{
-					// pro akcie, komodity a indexy
-					double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
-					positionSize = RiskValue() / (slPtDistance * symbolTradeTickValue * course);
-				}
-				if (!buy)
-				{
-					positionSize = -positionSize;
-				}
-				return positionSize;
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		private void BuySell403525(bool buy)
-		{
-			double? positionSize = GetPositionSize(buy);
-			double? price = GetPrice(buy);
-			(bool error, double distance) = GetSlPtDistance(buy);
-			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
-			if (error && positionSize != null && price != null)
-			{
-				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
-				var result = dlg.ShowDialog();
-				if (result == DialogResult.Yes)
-				{
-					if (checkBoxPendingOrder.Checked)
-					{
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.35), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.25), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(50));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.35), 1, GetTpDistanceByOrderSize(35));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.25), 1, GetTpDistanceByOrderSize(20));
-					}
-					else
-					{
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.35), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.25), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(50));
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.35), 1, GetTpDistanceByOrderSize(35));
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.25), 1, GetTpDistanceByOrderSize(20));
-					}
-					JoinSl();
-				}
-			}
-		}
-
-		private void BuySell504010(bool buy)
-		{
-			double? positionSize = GetPositionSize(buy);
-			double? price = GetPrice(buy);
-			(bool error, double distance) = GetSlPtDistance(buy);
-			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
-			if (error && positionSize != null && price != null)
-			{
-				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
-				var result = dlg.ShowDialog();
-				if (result == DialogResult.Yes)
-				{
-					if (checkBoxPendingOrder.Checked)
-					{
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.5), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.1), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.5), 1, GetTpDistanceByOrderSize(50));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.1), 1, GetTpDistanceByOrderSize(10));
-					}
-					else
-					{
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.5), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.1), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.5), 1, GetTpDistanceByOrderSize(50));
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.1), 1, GetTpDistanceByOrderSize(10));
-					}
-					JoinSl();
-				}
-			}
-		}
-
-		private void BuySell6040(bool buy)
-		{
-			double? positionSize = GetPositionSize(buy);
-			double? price = GetPrice(buy);
-			(bool error, double distance) = GetSlPtDistance(buy);
-			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
-			if (error && positionSize != null && price != null)
-			{
-				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
-				var result = dlg.ShowDialog();
-				if (result == DialogResult.Yes)
-				{
-					if (checkBoxPendingOrder.Checked)
-					{
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.6), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.6), 1, GetTpDistanceByOrderSize(100));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
-					}
-					else
-					{
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.6), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.6), 1, GetTpDistanceByOrderSize(100));
-						//MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
-					}
-					JoinSl();
-				}
-			}
-		}
-
-		private double GetTpDistanceByUnit(Orders orders, double unit)
-		{
-			// Aby nebyly vsechny TP ve stejne vzdalenosti, pocitam vzdalenost TP podle velikosti pozice.
-			// Nejvetsi pozice ma nejblizsi TP.
-			double maxUnit = orders.Max(x => Math.Abs(x.Units));
-			return 0.7 + Math.Abs(maxUnit - Math.Abs(unit)) * 3;
-		}
-
-		private double GetTpDistanceByOrderSize(int percent)
-		{
-			// Aby nebyly vsechny TP ve stejne vzdalenosti, pocitam vzdalenost TP podle velikosti pozice.
-			// Nejvetsi pozice ma nejblizsi TP.
-			return 0.7 + Math.Abs((double)percent - 100) / 100;
-		}
-
-		double CalculatePositionPercent(double positionSize, int percent)
-		{
-			return RoundPrice((positionSize * percent / 100) * (GetTrackBarPositionUsingPercent() / 100));
-		}
-
-		double CalculatePosition(double positionSize, double x)
-		{
-			return RoundPrice((positionSize * x) * (GetTrackBarPositionUsingPercent() / 100));
-		}
-
-		private void BuySellPercent(bool buy, int percent)
-		{
-			double? positionSize = GetPositionSize(buy);
-			double? price = GetPrice(buy);
-			(bool error, double distance) = GetSlPtDistance(buy);
-			double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
-			if (error && positionSize != null && price != null)
-			{
-				var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
-				var result = dlg.ShowDialog();
-				if (result == DialogResult.Yes)
-				{
-					if (checkBoxPendingOrder.Checked)
-					{
-						MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePositionPercent(positionSize.Value, percent), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						//MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePositionPercent(positionSize.Value, percent), 1, GetTpDistanceByOrderSize(percent));
-					}
-					else
-					{
-						MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePositionPercent(positionSize.Value, percent), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
-						// MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePositionPercent(positionSize.Value, percent), 1, GetTpDistanceByOrderSize(percent));
-					}
-					JoinSl();
-				}
-			}
-		}
-
-		private bool IsPossibleBuy(Orders marketOrders, Orders pendingOrders)
-		{
-			return (!marketOrders.Any() && !pendingOrders.Any()) || IsExistingPositionBuy(marketOrders) || IsExistingPositionBuy(pendingOrders);
-		}
-
-		private bool IsPossibleSell(Orders marketOrders, Orders pendingOrders)
-		{
-			return (!marketOrders.Any() && !pendingOrders.Any()) || IsExistingPositionSell(marketOrders) || IsExistingPositionSell(pendingOrders);
-		}
-
-		/// <summary>
-		/// Je pozice buy nebo sell?
-		/// </summary>
-		private bool IsExistingPositionSell(Orders orders)
-		{
-			return orders.Any() && orders[0].Units <= 0;
-		}
-
-		/// <summary>
-		/// Je pozice buy nebo sell?
-		/// </summary>
-		private bool IsExistingPositionBuy(Orders orders)
-		{
-			return orders.Any() && orders[0].Units >= 0;
-		}
-
-		private double IdealMaximumSlPrice(Orders orders)
-		{
-			if (orders.Any())
-			{
-				if (IsExistingPositionBuy(orders))
-				{
-					return orders.Where(x => x.SL > 0).Min(x => x.SL);
-				}
-				else
-				{
-					return orders.Max(x => x.SL);
-				}
-			}
-			return 0;
-		}
-
-		private double IdealMaximumPrice(Orders orders)
-		{
-			if (orders.Any())
-			{
-				if (IsExistingPositionBuy(orders))
-				{
-					return orders.Where(x => x.OpenPrice > 0).Min(x => x.OpenPrice);
-				}
-				else
-				{
-					return orders.Max(x => x.OpenPrice);
-				}
-			}
-			return 0;
-		}
-
-		private void SlUp(double movement)
-		{
-			Orders orders;
-			if (checkBoxMovePendingOrder.Checked)
-			{
-				orders = MetatraderInstance.Instance.GetPendingOrders();
-				double idealPrice = IdealMaximumPrice(orders);
-				foreach (var order in orders)
-				{
-					order.OpenPrice = idealPrice + (idealPrice * movement);
-					MetatraderInstance.Instance.ModifyPendingOrder(order);
-				}
-			}
-			else
-			{
-				orders = MetatraderInstance.Instance.GetMarketOrders();
-				double idealSl = IdealMaximumSlPrice(orders);
-				foreach (var order in orders)
-				{
-					order.SL = idealSl + (idealSl * movement);
-					MetatraderInstance.Instance.SetPositionSlAndPt(order);
-				}
-				if (!orders.Any())
-				{
-					orders = MetatraderInstance.Instance.GetPendingOrders();
-					idealSl = IdealMaximumSlPrice(orders);
-					foreach (var order in orders)
-					{
-						order.SL = idealSl + (idealSl * movement);
-						MetatraderInstance.Instance.SetOrderSlAndPt(order);
-					}
-				}
-			}
-			RefreshData(orders);
-		}
-
-		private void SlDown(double movement)
-		{
-			Orders orders;
-			if (checkBoxMovePendingOrder.Checked)
-			{
-				orders = MetatraderInstance.Instance.GetPendingOrders();
-				double idealPrice = IdealMaximumPrice(orders);
-				foreach (var order in orders)
-				{
-					order.OpenPrice = idealPrice - (idealPrice * movement);
-					MetatraderInstance.Instance.ModifyPendingOrder(order);
-				}
-			}
-			else
-			{
-				orders = MetatraderInstance.Instance.GetMarketOrders();
-				double idealSl = IdealMaximumSlPrice(orders);
-				foreach (var order in orders)
-				{
-					order.SL = idealSl - (idealSl * movement);
-					MetatraderInstance.Instance.SetPositionSlAndPt(order);
-				}
-				if (!orders.Any())
-				{
-					orders = MetatraderInstance.Instance.GetPendingOrders();
-					idealSl = IdealMaximumSlPrice(orders);
-					foreach (var order in orders)
-					{
-						order.SL = idealSl - (idealSl * movement);
-						MetatraderInstance.Instance.SetOrderSlAndPt(order);
-					}
-				}
-			}
-			RefreshData(orders);
-		}
-
-		/// <summary>
-		/// Pokud je nejaka limit order na nejakem miste, chceme prednostne, 
-		/// aby nova cena se nastavila na jiz existujici cenu.Teprve potom
-		/// chceme, aby se nastavila nejdale od ceny (IdealMaximumPrice).
-		/// </summary>
-		private double PriceAfterJoin(Orders orders)
-		{
-			if (orders.Any())
-			{
-				if (orders.Count() == 2)
-				{
-					// Pokud jsou jenom dva obchody, dej SL k tomu prvnimu z nich (podle order id).
-					return orders.OrderBy(x => x.Id).First().OpenPrice;
-				}
-				else
-				{
-					// Dej SL na misto, kde jsou jiz minimalne dva obchody spolu (predpokladam, ze jsou po joinu).
-					for (int i = 0; i < orders.Count; i++)
-					{
-						double sameValue = orders[i].OpenPrice;
-						for (int j = 1; j < orders.Count; j++)
-						{
-							if (i != j && sameValue == orders[j].OpenPrice)
-							{
-								return orders[i].OpenPrice;
-							}
-						}
-					}
-				}
-			}
-			return 0;
-		}
-
-		/// <summary>
-		/// Pokud je nejaky SL na nejakem miste, chceme prednostne, 
-		/// aby novy SL se nastavil na jiz existujici cenu. Teprve potom
-		/// chceme, aby se nastavil nejdale od ceny (IdealMaximumPrice).
-		/// </summary>
-		private double SlPriceAfterJoin(Orders orders)
-		{
-			if (orders.Any())
-			{
-				if (orders.Count() == 2)
-				{
-					// Pokud jsou jenom dva obchody, dej SL k tomu prvnimu z nich (podle order id).
-					return orders.OrderBy(x => x.Id).First().SL;
-				}
-				else
-				{
-					// Dej SL na misto, kde jsou jiz minimalne dva obchody spolu (predpokladam, ze jsou po joinu).
-					for (int i = 0; i < orders.Count; i++)
-					{
-						double sameValue = orders[i].SL;
-						for (int j = 1; j < orders.Count; j++)
-						{
-							if (i != j && sameValue == orders[j].SL)
-							{
-								return orders[i].SL;
-							}
-						}
-					}
-				}
-			}
-			return 0;
-		}
-
-		private bool JoinPrice(Orders orders)
-		{
-			double idealMinimumPrice = IdealMaximumPrice(orders); // Minimalni cena (je nejdale od ceny).
-			double priceAfterJoin = PriceAfterJoin(orders);
-			foreach (var order in orders)
-			{
-				double oldOpenPrice = order.OpenPrice;
-				if (priceAfterJoin == 0)
-				{
-					order.OpenPrice = idealMinimumPrice;
-				}
-				else
-				{
-					order.OpenPrice = priceAfterJoin;
-				}
-				if (oldOpenPrice != order.OpenPrice)
-				{
-					MetatraderInstance.Instance.ModifyPendingOrder(order);
-				}
-			}
-			return orders.Any();
-		}
-
-		private bool JoinSl(Orders orders, bool position)
-		{
-			double idealMinimumSl = IdealMaximumSlPrice(orders); // Minimalni SL (je nejdale od ceny).
-			double slPriceAfterJoin = SlPriceAfterJoin(orders);
-			foreach (var order in orders)
-			{
-				double previousSl = order.SL;
-				if (slPriceAfterJoin == 0)
-				{
-					order.SL = idealMinimumSl;
-				}
-				else
-				{
-					order.SL = slPriceAfterJoin;
-				}
-				if (previousSl != order.SL)
-				{
-					if (position)
-					{
-						MetatraderInstance.Instance.SetPositionSlAndPt(order);
-					}
-					else
-					{
-						MetatraderInstance.Instance.SetOrderSlAndPt(order);
-					}
-				}
-			}
-			return orders.Any();
-		}
-
-		private void JoinSl()
-		{
-			if (checkBoxMovePendingOrder.Checked)
-			{
-				Orders orders = MetatraderInstance.Instance.GetPendingOrders();
-				JoinPrice(orders);
-			}
-			else
-			{
-				Orders orders = MetatraderInstance.Instance.GetMarketOrders();
-				if (!JoinSl(orders, true))
-				{
-					orders = MetatraderInstance.Instance.GetPendingOrders();
-					JoinSl(orders, false);
-				}
-				RefreshData(orders);
-			}
-		}
-
-		private void buttonSlUpMax_Click(object sender, EventArgs e)
-		{
-			SlUp(0.00125);
-		}
-
-		private void buttonSlDownMax_Click(object sender, EventArgs e)
-		{
-			SlDown(0.00125);
-		}
-
-		private void buttonSlUp_Click(object sender, EventArgs e)
-		{
-			SlUp(0.0005);
-		}
-
-		private void buttonSlDown_Click(object sender, EventArgs e)
-		{
-			SlDown(0.0005);
-		}
-
-		private void buttonJoinSl_Click(object sender, EventArgs e)
-		{
-			JoinSl();
-		}
-
-		private void buttonSlUpMini_Click(object sender, EventArgs e)
-		{
-			SlUp(0.00006);
-		}
-
-		private void buttonSlDownMini_Click(object sender, EventArgs e)
-		{
-			SlDown(0.00006);
-		}
-
-		private void checkBoxAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
-		{
-			this.TopMost = checkBoxAlwaysOnTop.Checked;
-		}
-
-		private void buttonOrderBuy1_Click(object sender, EventArgs e)
-		{
-			BuySell403525(true);
-		}
-
-		private void buttonOrderSell1_Click(object sender, EventArgs e)
-		{
-			BuySell403525(false);
-		}
-
-		private void buttonOrderBuy2_Click(object sender, EventArgs e)
-		{
-			BuySell6040(true);
-		}
-
-		private void buttonOrderSell2_Click(object sender, EventArgs e)
-		{
-			BuySell6040(false);
-		}
-
-		private void buttonOrderBuy3_Click(object sender, EventArgs e)
-		{
-			BuySell504010(true);
-		}
-
-		private void buttonOrderSell3_Click(object sender, EventArgs e)
-		{
-			BuySell504010(false);
-		}
-
-		private void buttonBuy100_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(true, 100);
-		}
-
-		private void buttonBuy60_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(true, 60);
-		}
-
-		private void buttonBuy30_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(true, 30);
-		}
-
-		private void buttonBuy10_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(true, 10);
-		}
-
-		private void buttonSell100_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(false, 100);
-		}
-
-		private void buttonSell60_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(false, 60);
-		}
-
-		private void buttonSell30_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(false, 30);
-		}
-
-		private void buttonSell10_Click(object sender, EventArgs e)
-		{
-			BuySellPercent(false, 10);
-		}
-
-		//public void ShowLabelConnected(bool connected)
-		//{
-		//	if (connected)
-		//	{
-		//		labelConnected.Text = "**********";
-		//		labelConnected.ForeColor = Color.Green;
-		//	}
-		//	else
-		//	{
-		//		labelConnected.Text = "-----------";
-		//		labelConnected.ForeColor = Color.Red;
-		//	}
-		//}
-
-		// Add these fields to your FormTradingPanel class:
-		private System.Windows.Forms.Timer? timerLabelConnected;
-		private int labelConnectedPos = 0;
-		private int labelConnectedDir = 1;
-		private const int labelConnectedMax = 12; // Adjust for the width you want
-
-		public void ShowLabelConnected(bool connected)
-		{
-			if (connected)
-			{
-				// Start animation
-				if (timerLabelConnected == null)
-				{
-					timerLabelConnected = new System.Windows.Forms.Timer();
-					timerLabelConnected.Interval = 500; // Animation speed in ms
-					timerLabelConnected.Tick += TimerLabelConnected_Tick;
-					labelConnectedPos = 0;
-					labelConnectedDir = 1;
-					timerLabelConnected.Start();
-					labelConnected.ForeColor = Color.Green;
-				}
-			}
-			else
-			{
-				// Stop animation and show static disconnected state
-				timerLabelConnected?.Stop();
-				timerLabelConnected = null;
-				labelConnected.Text = "[-----------]";
-				labelConnected.ForeColor = Color.Red;
-			}
-		}
-
-		private void TimerLabelConnected_Tick(object? sender, EventArgs e)
-		{
-			// Build the string with spaces and one asterisk
-			labelConnected.Text = "[" + new string(' ', labelConnectedPos) + "-" + new string(' ', labelConnectedMax - labelConnectedPos) + "]";
-			// Move position
-			labelConnectedPos += labelConnectedDir;
-			if (labelConnectedPos >= labelConnectedMax)
-			{
-				labelConnectedDir = -1;
-				labelConnectedPos = labelConnectedMax;
-			}
-			else if (labelConnectedPos <= 0)
-			{
-				labelConnectedDir = 1;
-				labelConnectedPos = 0;
-			}
-		}
-
-		private void closeAll(bool allOrders)
-		{
-			SlToBeAutomation = false;
-
-			Orders orders = MetatraderInstance.Instance.GetMarketOrders(allOrders);
-			foreach (var order in orders)
-			{
-				MetatraderInstance.Instance.CloseMarketOrder(order.Id);
-			}
-			orders = MetatraderInstance.Instance.GetPendingOrders(allOrders);
-			foreach (var order in orders)
-			{
-				MetatraderInstance.Instance.ClosePendingOrder(order.Id);
-			}
-			//MetatraderInstance.Instance.CloseAllPendingOrders();
-		}
-
-		private void buttonCloseAll_Click(object sender, EventArgs e)
-		{
-			var dlg = new ConfirmDialog("Do you really close all orders?");
-			var result = dlg.ShowDialog();
-			if (result == DialogResult.Yes)
-			{
-				closeAll(false);
-			}
-		}
-
-		private void checkBoxPendingOrder_CheckedChanged(object sender, EventArgs e)
-		{
-			textBoxPrice.Enabled = checkBoxPendingOrder.Checked;
-		}
-
-		private void buttonSetTp15_Click(object sender, EventArgs e)
-		{
-			double counter;
-			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
-			if (orders.Any())
-			{
-				counter = 1.5;
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
-					counter += 0.5;
-				}
-				RefreshData(orders);
-			}
-			else
-			{
-				counter = 1.5;
-				orders = MetatraderInstance.Instance.GetPendingOrders();
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
-					counter += 0.5;
-				}
-				RefreshData(orders);
-			}
-		}
-
-		private void buttonSetTp_Click(object sender, EventArgs e)
-		{
-			int counter;
-			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
-			if (orders.Any())
-			{
-				counter = 1;
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
-					counter++;
-				}
-				RefreshData(orders);
-			}
-			else
-			{
-				counter = 1;
-				orders = MetatraderInstance.Instance.GetPendingOrders();
-				foreach (var order in orders)
-				{
-					MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
-					counter++;
-				}
-				RefreshData(orders);
-			}
-		}
-
-		private void FormTradingPanel_Load(object sender, EventArgs e)
-		{
-			checkBoxBlink.Checked = true;
-
-			this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-
-			bool connected = MetatraderInstance.Connect();
-			ShowLabelConnected(connected);
-
-			checkBoxMovePendingOrder.Checked = false;
-			checkBoxPendingOrder.Checked = false;
-			textBoxPrice.Enabled = false;
-
-			textBoxSlDistance.Text = String.Empty; //"0.5";
-			checkBoxAlwaysOnTop.Checked = true;
-
-			this.TopMost = true;
-
-			SlToBeAutomation = false;
-			progressBarSlToBeAutomation.Value = 0;
-			progressBarSlToHalfAutomation.Value = 0;
-			progressBarSlPtMonitoring.Value = 0;
-
-			trackBarPositionUsing.Value = Utils.Utilities.TrackBarPositionUsing;
-			trackBarPositionUsing_ValueChanged(null, null);
-
-			timerRefreshLabels.Interval = 1000;
-
-			checkBoxAutoCloseTrades.Checked = true;
-
-			//string currency = MetatraderInstance.Instance.AccountCurrency();
-			//this.Text = "SvpTradingPanel: "
-			//	+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
-			//	+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
-			//	+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName) 
-			//	+ ", " + (Utilities.AccountEquity == 0 ? String.Empty : Utilities.AccountEquity + currency + ", ") 
-			//	+ Utilities.RiskToTrade * 100 + "%, " 
-			//	+ Utilities.BrokerMarginEquityCoefficient + "x, "
-			//	+ Utilities.TrackBarPositionUsing + "%, "
-			//	+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
-		}
-
-		private enum HueType
-		{
-			Stoploss,
-			Takeprofit,
-			Hue
-		};
-
-		private void CallHue(HueType HueType)
-		{
-			try
-			{
-				using (var client = new HttpClient())
-				{
-					string url;
-					if (HueType == HueType.Takeprofit)
-					{
-						url = "http://localhost/huePt";
-					}
-					else if (HueType == HueType.Stoploss)
-					{
-						url = "http://localhost/hueSl";
-					}
-					else if (HueType == HueType.Hue)
-					{
-						url = "http://localhost/hue";
-					}
-					else
-					{
-						return;
-					}
-					var body = "Trades close after 10:30 p.m.";
-					var content = new StringContent(body);
-					var response = client.PostAsync(url, content).GetAwaiter().GetResult();
-				}
-			}
-			catch (Exception) { }
-		}
-
-		// Po ukonceni prvniho TP se posune SL na BE u vsech obchodu.
-		private void SlAutomation()
-		{
-			if (SlToBeAutomation)
-			{
-				switch (SlToBeAutomationType)
-				{
-					case SlTypeEnum.Monitoring:
-						if (progressBarSlPtMonitoring.Value == 100)
-						{
-							progressBarSlPtMonitoring.Value = 0;
-						}
-						else
-						{
-							progressBarSlPtMonitoring.Value += SlToBeAutomationProgressIncrementConstant;
-						}
-						break;
-					case SlTypeEnum.BreakEven:
-						if (progressBarSlToBeAutomation.Value == 100)
-						{
-							progressBarSlToBeAutomation.Value = 0;
-						}
-						else
-						{
-							progressBarSlToBeAutomation.Value += SlToBeAutomationProgressIncrementConstant;
-						}
-						break;
-					case SlTypeEnum.Half:
-						if (progressBarSlToHalfAutomation.Value == 100)
-						{
-							progressBarSlToHalfAutomation.Value = 0;
-						}
-						else
-						{
-							progressBarSlToHalfAutomation.Value += SlToBeAutomationProgressIncrementConstant;
-						}
-						break;
-				}
-
-				Orders orders = MetatraderInstance.Instance.GetMarketOrders(true);
-
-				if (SlToBeAutomationOrders.Count != orders.Count)
-				{
-					Task.Delay(5000); // Cekani na pripadne uzavreni vsech pozic.
-
-					orders = MetatraderInstance.Instance.GetMarketOrders(true);
-
-					foreach (var instrument in SlToBeAutomationOrders.Select(x => x.Instrument).Distinct())
-					{
-						var slToBeAutomationOrdersByInstrument = SlToBeAutomationOrders.Where(x => x.Instrument == instrument).ToList();
-						var ordersByInstrument = MetatraderInstance.Instance.GetMarketOrders(true).Where(x => x.Instrument == instrument).ToList();
-
-						if (slToBeAutomationOrdersByInstrument.Count() > ordersByInstrument.Count())
-						{
-							(string? instrument, double profit) result = MetatraderInstance.Instance.GetLatestProfit(instrument);
-							if (instrument != null)
-							{
-								if (checkBoxBlink.Checked)
-								{
-									CallHue(result.profit >= 0 ? HueType.Takeprofit : HueType.Stoploss);
-								}
-							}
-
-							if (SlToBeAutomationType == SlTypeEnum.BreakEven && (ordersByInstrument.Count > 0))
-							{
-								foreach (var order in ordersByInstrument)
-								{
-									order.SL = order.OpenPrice;
-									try
-									{
-										MetatraderInstance.Instance.SetPositionSlAndPt(order);
-									}
-									catch
-									{
-										// nothing to do.
-									}
-								}
-							}
-
-							if (SlToBeAutomationType == SlTypeEnum.Half && (ordersByInstrument.Count > 0))
-							{
-								foreach (var order in ordersByInstrument)
-								{
-									if (order.Units > 0)
-									{
-										order.SL = order.OpenPrice - (order.OpenPrice - order.SL) / 2;
-									}
-									else
-									{
-										order.SL = order.OpenPrice + (order.SL - order.OpenPrice) / 2;
-									}
-
-									/*
+    public partial class FormTradingPanel : Form
+    {
+        private const int SlToBeAutomationProgressIncrementConstant = 20;
+        private bool SlToBeAutomation { get; set; }
+        private Orders SlToBeAutomationOrders { get; set; } = new Orders();
+
+        private enum SlTypeEnum
+        {
+            Monitoring,
+            BreakEven,
+            Half
+        }
+
+        private SlTypeEnum SlToBeAutomationType { get; set; }
+
+        public FormTradingPanel()
+        {
+            InitializeComponent();
+
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+        }
+
+        // Metoda na získání času buildu EXE souboru
+        private DateTime GetBuildDateTime()
+        {
+            try
+            {
+                string exePath = Application.ExecutablePath;
+                return System.IO.File.GetLastWriteTime(exePath);
+            }
+            catch
+            {
+                return DateTime.MinValue;
+            }
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+
+            // Např. zmenší celý formulář na 80 % původní velikosti
+            float scaleFactor = 0.8f;
+            this.Scale(new SizeF(scaleFactor, scaleFactor));
+
+            // Volitelné: aby i fonty odpovídaly
+            foreach (Control c in this.Controls)
+            {
+                c.Font = new Font(c.Font.FontFamily, c.Font.Size * scaleFactor, c.Font.Style);
+            }
+
+            this.Left = 0;
+            this.Top = 150;
+        }
+
+        private void RefreshLabelSlLoss()
+        {
+            if (MetatraderInstance.Instance != null)
+            {
+                string currency = MetatraderInstance.Instance.AccountCurrency();
+                if (currency != null)
+                {
+                    // labelSlLoss.Text = "Full SL loss: " + Math.Round(RiskValue() * GetTrackBarPositionUsingPercent() / 100, 2) + " " + currency;
+
+                    double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
+                    double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
+                    bool result;
+                    double slPtDistance;
+                    (result, slPtDistance) = GetSlPtDistance(true);
+                    if (result)
+                    {
+                        if (IsForex(MetatraderInstance.Instance.Symbol))
+                        {
+                            labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv, 2) + " " + currency;
+                        }
+                        else
+                        {
+                            double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
+                            labelSlLoss.Text = "Full SL loss: " + Math.Round(slPtDistance * ps * tv * course, 2) + " " + currency;
+                        }
+                    }
+                    else
+                    {
+                        labelSlLoss.Text = "Full SL loss: 0 " + currency;
+                    }
+                }
+            }
+        }
+
+        private void RefreshData(Orders orders)
+        {
+            string currency = MetatraderInstance.Instance.AccountCurrency();
+            var sumOfUnits = Math.Abs(orders.Select(x => x.Units).Sum());
+            var rrr = orders.Select(x => ((Math.Abs(x.OpenPrice - x.PT)) / (Math.Abs(x.OpenPrice - x.SL))) / sumOfUnits * Math.Abs(x.Units)).Sum();
+            var loss = orders.Select(x => Math.Abs(x.OpenPrice - x.SL) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
+            var profit = orders.Select(x => Math.Abs(x.OpenPrice - x.PT) * Math.Abs(x.Units)).Sum() / MetatraderInstance.Instance.SymbolPoint() * MetatraderInstance.Instance.SymbolTradeTickValue();
+            if (!IsForex(MetatraderInstance.Instance.Symbol))
+            {
+                double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
+                loss = loss * course;
+                profit = profit * course;
+            }
+            labelRrr.Text = "RRR: " + Math.Round(rrr, 2);
+            labelLoss.Text = "Loss: " + Math.Round(loss, 2) + " " + currency;
+            labelProfit.Text = "Profit: " + Math.Round(profit, 2) + " " + currency;
+            double ps = CalculatePosition(GetPositionSize(true) ?? 0, 1);
+            if (ps == 0)
+            {
+                ps = CalculatePosition(GetPositionSize(false) ?? 0, 1);
+            }
+            labelPs.Text = "Position size: " + Math.Round(Math.Abs(ps), 2);
+            double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
+            labelTickValue.Text = "Tick value: " + Math.Round(tv, 2);
+            if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
+            {
+                labelUsdCzk.Text = "USD/CZK: " + Math.Round(MainAccountCourse(), 2);
+            }
+            else
+            {
+                labelUsdCzk.Text = "USD/USD: " + Math.Round(MainAccountCourse(), 2);
+            }
+            labelContractSize.Text = "Contract size: " + MetatraderInstance.Instance.ContractSize();
+            RefreshLabelSlLoss();
+            labelSymbol.Text = MetatraderInstance.Instance.Symbol;
+        }
+
+        private double? GetPrice(bool buy)
+        {
+            if (Double.TryParse(textBoxPrice.Text, out double price))
+            {
+                return price;
+            }
+            else
+            {
+                if (checkBoxPendingOrder.Checked)
+                {
+                    double actualPrice = MetatraderInstance.Instance.GetActualAskPrice();
+
+                    // Pending order vytvor v idealni vzdalenosti od ceny, pokud cena neni zadana.
+                    if (buy)
+                    {
+                        return actualPrice - (actualPrice * 0.01);
+                    }
+                    else
+                    {
+                        return actualPrice + (actualPrice * 0.01);
+                    }
+                }
+                else
+                {
+                    // Market order
+                    return 0;
+                }
+            }
+        }
+
+        // Zaokrouhleni matematicky.
+        private double RoundPrice(double number)
+        {
+            int digits = MetatraderInstance.Instance.SymbolLotStepDigits();
+            double value = Math.Round(number, digits, MidpointRounding.AwayFromZero);
+            return value;
+        }
+
+        // Zaokrouhleni dolu - nepouzivam.
+        //private double RoundPrice(double number)
+        //{
+        //	int digits = MetatraderInstance.Instance.SymbolLotStepDigits();
+        //	double factor = Math.Pow(10, digits);
+        //	double value = Math.Floor(number * factor) / factor;
+        //	return value;
+        //}
+
+        private double RiskValue()
+        {
+            // na uctu mam pouze 1/4 toho, co chci obchodovat, kvuli mozne kradezi. Pouzivam paku.			
+            double accountEquity = Utilities.AccountEquity == 0 ? MetatraderInstance.Instance.AccountEquity() : Utilities.AccountEquity;
+            return accountEquity * Utilities.BrokerMarginEquityCoefficient * Utilities.RiskToTrade;
+        }
+
+        private (bool, double) GetSlPtDistance(bool buy)
+        {
+            Orders marketOrders = MetatraderInstance.Instance.GetMarketOrders();
+            Orders pendingOrders = MetatraderInstance.Instance.GetPendingOrders();
+            bool result =
+                (Double.TryParse(textBoxSlDistance.Text, out double positionSize) // Je validni velikost pozice v textboxu?
+                && (positionSize * 0.1 > 0) // Je validni velikost pozice v textboxu?
+                && ((IsPossibleBuy(marketOrders, pendingOrders) && buy) || (IsPossibleSell(marketOrders, pendingOrders) && !buy)) // Pokud je jiz otevrena pozice, nova pozice musi byt stejnejo typu (buy/sell).
+                );
+            return (result, positionSize);
+        }
+
+        bool IsForex(string? symbol)
+        {
+            if (string.IsNullOrWhiteSpace(symbol))
+                return false;
+
+            // Odstraní oddělovače
+            var clean = symbol.ToUpper().Replace("/", "").Replace(".", "");
+
+            // Ořízne na prvních 6 znaků (pokud je delší)
+            if (clean.Length > 6)
+                clean = clean.Substring(0, 6);
+
+            // Pokud po oříznutí není 6 znaků, není to platné
+            if (clean.Length != 6)
+                return false;
+
+            // Kontrola, zda jsou všechny znaky písmena A-Z
+            foreach (char c in clean)
+            {
+                if (c < 'A' || c > 'Z')
+                    return false;
+            }
+
+            // ISO 4217 kódy měn
+            string[] iso4217 = {
+                "USD","EUR","JPY","GBP","AUD","CAD","CHF","NZD",
+                "SEK","NOK","DKK","PLN","CZK","HUF","ZAR","SGD","HKD"
+            };
+
+            string baseCurrency = clean.Substring(0, 3);
+            string quoteCurrency = clean.Substring(3, 3);
+
+            return iso4217.Contains(baseCurrency) && iso4217.Contains(quoteCurrency);
+        }
+
+        private double MainAccountCourse()
+        {
+            if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
+            {
+                return MetatraderInstance.Instance.GetActualBidPrice(MetatraderInstance.Instance.SymbolName("USDCZK"));
+            }
+            else
+            {
+                return 1;
+            }
+
+        }
+
+        private double? GetPositionSize(bool buy)
+        {
+            Orders marketOrders = MetatraderInstance.Instance.GetMarketOrders();
+            Orders pendingOrders = MetatraderInstance.Instance.GetPendingOrders();
+            bool result;
+            double slPtDistance;
+            (result, slPtDistance) = GetSlPtDistance(buy);
+            if (result)
+            {
+                // tick size misto velikosti pozice				
+                var symbolTradeTickValue = MetatraderInstance.Instance.SymbolTradeTickValue();
+
+                double positionSize;
+                if (IsForex(MetatraderInstance.Instance.Symbol))
+                {
+                    positionSize = RiskValue() / (slPtDistance * symbolTradeTickValue);
+                }
+                else
+                {
+                    // pro akcie, komodity a indexy
+                    double course = Utilities.TickValueCompensation ? MainAccountCourse() : 1;
+                    positionSize = RiskValue() / (slPtDistance * symbolTradeTickValue * course);
+                }
+                if (!buy)
+                {
+                    positionSize = -positionSize;
+                }
+                return positionSize;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void BuySell403525(bool buy)
+        {
+            double? positionSize = GetPositionSize(buy);
+            double? price = GetPrice(buy);
+            (bool error, double distance) = GetSlPtDistance(buy);
+            double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
+            if (error && positionSize != null && price != null)
+            {
+                var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
+                    if (checkBoxPendingOrder.Checked)
+                    {
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.35), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.25), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(50));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.35), 1, GetTpDistanceByOrderSize(35));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.25), 1, GetTpDistanceByOrderSize(20));
+                    }
+                    else
+                    {
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.35), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.25), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(50));
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.35), 1, GetTpDistanceByOrderSize(35));
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.25), 1, GetTpDistanceByOrderSize(20));
+                    }
+                    JoinSl();
+                }
+            }
+        }
+
+        private void BuySell504010(bool buy)
+        {
+            double? positionSize = GetPositionSize(buy);
+            double? price = GetPrice(buy);
+            (bool error, double distance) = GetSlPtDistance(buy);
+            double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
+            if (error && positionSize != null && price != null)
+            {
+                var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
+                    if (checkBoxPendingOrder.Checked)
+                    {
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.5), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.1), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.5), 1, GetTpDistanceByOrderSize(50));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.1), 1, GetTpDistanceByOrderSize(10));
+                    }
+                    else
+                    {
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.5), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.1), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 3);
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.5), 1, GetTpDistanceByOrderSize(50));
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.1), 1, GetTpDistanceByOrderSize(10));
+                    }
+                    JoinSl();
+                }
+            }
+        }
+
+        private void BuySell6040(bool buy)
+        {
+            double? positionSize = GetPositionSize(buy);
+            double? price = GetPrice(buy);
+            (bool error, double distance) = GetSlPtDistance(buy);
+            double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
+            if (error && positionSize != null && price != null)
+            {
+                var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
+                    if (checkBoxPendingOrder.Checked)
+                    {
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.6), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.6), 1, GetTpDistanceByOrderSize(100));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
+                    }
+                    else
+                    {
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.6), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePosition(positionSize.Value, 0.4), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint) * 2);
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.6), 1, GetTpDistanceByOrderSize(100));
+                        //MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePosition(positionSize.Value, 0.4), 1, GetTpDistanceByOrderSize(40));
+                    }
+                    JoinSl();
+                }
+            }
+        }
+
+        private double GetTpDistanceByUnit(Orders orders, double unit)
+        {
+            // Aby nebyly vsechny TP ve stejne vzdalenosti, pocitam vzdalenost TP podle velikosti pozice.
+            // Nejvetsi pozice ma nejblizsi TP.
+            double maxUnit = orders.Max(x => Math.Abs(x.Units));
+            return 0.7 + Math.Abs(maxUnit - Math.Abs(unit)) * 3;
+        }
+
+        private double GetTpDistanceByOrderSize(int percent)
+        {
+            // Aby nebyly vsechny TP ve stejne vzdalenosti, pocitam vzdalenost TP podle velikosti pozice.
+            // Nejvetsi pozice ma nejblizsi TP.
+            return 0.7 + Math.Abs((double)percent - 100) / 100;
+        }
+
+        double CalculatePositionPercent(double positionSize, int percent)
+        {
+            return RoundPrice((positionSize * percent / 100) * (GetTrackBarPositionUsingPercent() / 100));
+        }
+
+        double CalculatePosition(double positionSize, double x)
+        {
+            return RoundPrice((positionSize * x) * (GetTrackBarPositionUsingPercent() / 100));
+        }
+
+        private void BuySellPercent(bool buy, int percent)
+        {
+            double? positionSize = GetPositionSize(buy);
+            double? price = GetPrice(buy);
+            (bool error, double distance) = GetSlPtDistance(buy);
+            double symbolPoint = MetatraderInstance.Instance.SymbolPoint();
+            if (error && positionSize != null && price != null)
+            {
+                var dlg = new ConfirmDialog("Do you really open order " + (buy ? "to long" : "to short") + "?");
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
+                    if (checkBoxPendingOrder.Checked)
+                    {
+                        MetatraderInstance.Instance.CreatePendingOrderSlPtRelative(price.Value, CalculatePositionPercent(positionSize.Value, percent), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        //MetatraderInstance.Instance.CreatePendingOrderSlPtPercent(price.Value, CalculatePositionPercent(positionSize.Value, percent), 1, GetTpDistanceByOrderSize(percent));
+                    }
+                    else
+                    {
+                        MetatraderInstance.Instance.CreateMarketOrderSlPtRelative(CalculatePositionPercent(positionSize.Value, percent), Math.Abs(distance * symbolPoint), Math.Abs(distance * symbolPoint));
+                        // MetatraderInstance.Instance.CreateMarketOrderSlPtPercent(CalculatePositionPercent(positionSize.Value, percent), 1, GetTpDistanceByOrderSize(percent));
+                    }
+                    JoinSl();
+                }
+            }
+        }
+
+        private bool IsPossibleBuy(Orders marketOrders, Orders pendingOrders)
+        {
+            return (!marketOrders.Any() && !pendingOrders.Any()) || IsExistingPositionBuy(marketOrders) || IsExistingPositionBuy(pendingOrders);
+        }
+
+        private bool IsPossibleSell(Orders marketOrders, Orders pendingOrders)
+        {
+            return (!marketOrders.Any() && !pendingOrders.Any()) || IsExistingPositionSell(marketOrders) || IsExistingPositionSell(pendingOrders);
+        }
+
+        /// <summary>
+        /// Je pozice buy nebo sell?
+        /// </summary>
+        private bool IsExistingPositionSell(Orders orders)
+        {
+            return orders.Any() && orders[0].Units <= 0;
+        }
+
+        /// <summary>
+        /// Je pozice buy nebo sell?
+        /// </summary>
+        private bool IsExistingPositionBuy(Orders orders)
+        {
+            return orders.Any() && orders[0].Units >= 0;
+        }
+
+        private double IdealMaximumSlPrice(Orders orders)
+        {
+            if (orders.Any())
+            {
+                if (IsExistingPositionBuy(orders))
+                {
+                    return orders.Where(x => x.SL > 0).Min(x => x.SL);
+                }
+                else
+                {
+                    return orders.Max(x => x.SL);
+                }
+            }
+            return 0;
+        }
+
+        private double IdealMaximumPrice(Orders orders)
+        {
+            if (orders.Any())
+            {
+                if (IsExistingPositionBuy(orders))
+                {
+                    return orders.Where(x => x.OpenPrice > 0).Min(x => x.OpenPrice);
+                }
+                else
+                {
+                    return orders.Max(x => x.OpenPrice);
+                }
+            }
+            return 0;
+        }
+
+        private void SlUp(double movement)
+        {
+            Orders orders;
+            if (checkBoxMovePendingOrder.Checked)
+            {
+                orders = MetatraderInstance.Instance.GetPendingOrders();
+                double idealPrice = IdealMaximumPrice(orders);
+                foreach (var order in orders)
+                {
+                    order.OpenPrice = idealPrice + (idealPrice * movement);
+                    MetatraderInstance.Instance.ModifyPendingOrder(order);
+                }
+            }
+            else
+            {
+                orders = MetatraderInstance.Instance.GetMarketOrders();
+                double idealSl = IdealMaximumSlPrice(orders);
+                foreach (var order in orders)
+                {
+                    order.SL = idealSl + (idealSl * movement);
+                    MetatraderInstance.Instance.SetPositionSlAndPt(order);
+                }
+                if (!orders.Any())
+                {
+                    orders = MetatraderInstance.Instance.GetPendingOrders();
+                    idealSl = IdealMaximumSlPrice(orders);
+                    foreach (var order in orders)
+                    {
+                        order.SL = idealSl + (idealSl * movement);
+                        MetatraderInstance.Instance.SetOrderSlAndPt(order);
+                    }
+                }
+            }
+            RefreshData(orders);
+        }
+
+        private void SlDown(double movement)
+        {
+            Orders orders;
+            if (checkBoxMovePendingOrder.Checked)
+            {
+                orders = MetatraderInstance.Instance.GetPendingOrders();
+                double idealPrice = IdealMaximumPrice(orders);
+                foreach (var order in orders)
+                {
+                    order.OpenPrice = idealPrice - (idealPrice * movement);
+                    MetatraderInstance.Instance.ModifyPendingOrder(order);
+                }
+            }
+            else
+            {
+                orders = MetatraderInstance.Instance.GetMarketOrders();
+                double idealSl = IdealMaximumSlPrice(orders);
+                foreach (var order in orders)
+                {
+                    order.SL = idealSl - (idealSl * movement);
+                    MetatraderInstance.Instance.SetPositionSlAndPt(order);
+                }
+                if (!orders.Any())
+                {
+                    orders = MetatraderInstance.Instance.GetPendingOrders();
+                    idealSl = IdealMaximumSlPrice(orders);
+                    foreach (var order in orders)
+                    {
+                        order.SL = idealSl - (idealSl * movement);
+                        MetatraderInstance.Instance.SetOrderSlAndPt(order);
+                    }
+                }
+            }
+            RefreshData(orders);
+        }
+
+        /// <summary>
+        /// Pokud je nejaka limit order na nejakem miste, chceme prednostne, 
+        /// aby nova cena se nastavila na jiz existujici cenu.Teprve potom
+        /// chceme, aby se nastavila nejdale od ceny (IdealMaximumPrice).
+        /// </summary>
+        private double PriceAfterJoin(Orders orders)
+        {
+            if (orders.Any())
+            {
+                if (orders.Count() == 2)
+                {
+                    // Pokud jsou jenom dva obchody, dej SL k tomu prvnimu z nich (podle order id).
+                    return orders.OrderBy(x => x.Id).First().OpenPrice;
+                }
+                else
+                {
+                    // Dej SL na misto, kde jsou jiz minimalne dva obchody spolu (predpokladam, ze jsou po joinu).
+                    for (int i = 0; i < orders.Count; i++)
+                    {
+                        double sameValue = orders[i].OpenPrice;
+                        for (int j = 1; j < orders.Count; j++)
+                        {
+                            if (i != j && sameValue == orders[j].OpenPrice)
+                            {
+                                return orders[i].OpenPrice;
+                            }
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Pokud je nejaky SL na nejakem miste, chceme prednostne, 
+        /// aby novy SL se nastavil na jiz existujici cenu. Teprve potom
+        /// chceme, aby se nastavil nejdale od ceny (IdealMaximumPrice).
+        /// </summary>
+        private double SlPriceAfterJoin(Orders orders)
+        {
+            if (orders.Any())
+            {
+                if (orders.Count() == 2)
+                {
+                    // Pokud jsou jenom dva obchody, dej SL k tomu prvnimu z nich (podle order id).
+                    return orders.OrderBy(x => x.Id).First().SL;
+                }
+                else
+                {
+                    // Dej SL na misto, kde jsou jiz minimalne dva obchody spolu (predpokladam, ze jsou po joinu).
+                    for (int i = 0; i < orders.Count; i++)
+                    {
+                        double sameValue = orders[i].SL;
+                        for (int j = 1; j < orders.Count; j++)
+                        {
+                            if (i != j && sameValue == orders[j].SL)
+                            {
+                                return orders[i].SL;
+                            }
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+
+        private bool JoinPrice(Orders orders)
+        {
+            double idealMinimumPrice = IdealMaximumPrice(orders); // Minimalni cena (je nejdale od ceny).
+            double priceAfterJoin = PriceAfterJoin(orders);
+            foreach (var order in orders)
+            {
+                double oldOpenPrice = order.OpenPrice;
+                if (priceAfterJoin == 0)
+                {
+                    order.OpenPrice = idealMinimumPrice;
+                }
+                else
+                {
+                    order.OpenPrice = priceAfterJoin;
+                }
+                if (oldOpenPrice != order.OpenPrice)
+                {
+                    MetatraderInstance.Instance.ModifyPendingOrder(order);
+                }
+            }
+            return orders.Any();
+        }
+
+        private bool JoinSl(Orders orders, bool position)
+        {
+            double idealMinimumSl = IdealMaximumSlPrice(orders); // Minimalni SL (je nejdale od ceny).
+            double slPriceAfterJoin = SlPriceAfterJoin(orders);
+            foreach (var order in orders)
+            {
+                double previousSl = order.SL;
+                if (slPriceAfterJoin == 0)
+                {
+                    order.SL = idealMinimumSl;
+                }
+                else
+                {
+                    order.SL = slPriceAfterJoin;
+                }
+                if (previousSl != order.SL)
+                {
+                    if (position)
+                    {
+                        MetatraderInstance.Instance.SetPositionSlAndPt(order);
+                    }
+                    else
+                    {
+                        MetatraderInstance.Instance.SetOrderSlAndPt(order);
+                    }
+                }
+            }
+            return orders.Any();
+        }
+
+        private void JoinSl()
+        {
+            if (checkBoxMovePendingOrder.Checked)
+            {
+                Orders orders = MetatraderInstance.Instance.GetPendingOrders();
+                JoinPrice(orders);
+            }
+            else
+            {
+                Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+                if (!JoinSl(orders, true))
+                {
+                    orders = MetatraderInstance.Instance.GetPendingOrders();
+                    JoinSl(orders, false);
+                }
+                RefreshData(orders);
+            }
+        }
+
+        private void buttonSlUpMax_Click(object sender, EventArgs e)
+        {
+            SlUp(0.00125);
+        }
+
+        private void buttonSlDownMax_Click(object sender, EventArgs e)
+        {
+            SlDown(0.00125);
+        }
+
+        private void buttonSlUp_Click(object sender, EventArgs e)
+        {
+            SlUp(0.0005);
+        }
+
+        private void buttonSlDown_Click(object sender, EventArgs e)
+        {
+            SlDown(0.0005);
+        }
+
+        private void buttonJoinSl_Click(object sender, EventArgs e)
+        {
+            JoinSl();
+        }
+
+        private void buttonSlUpMini_Click(object sender, EventArgs e)
+        {
+            SlUp(0.00006);
+        }
+
+        private void buttonSlDownMini_Click(object sender, EventArgs e)
+        {
+            SlDown(0.00006);
+        }
+
+        private void checkBoxAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
+        {
+            this.TopMost = checkBoxAlwaysOnTop.Checked;
+        }
+
+        private void buttonOrderBuy1_Click(object sender, EventArgs e)
+        {
+            BuySell403525(true);
+        }
+
+        private void buttonOrderSell1_Click(object sender, EventArgs e)
+        {
+            BuySell403525(false);
+        }
+
+        private void buttonOrderBuy2_Click(object sender, EventArgs e)
+        {
+            BuySell6040(true);
+        }
+
+        private void buttonOrderSell2_Click(object sender, EventArgs e)
+        {
+            BuySell6040(false);
+        }
+
+        private void buttonOrderBuy3_Click(object sender, EventArgs e)
+        {
+            BuySell504010(true);
+        }
+
+        private void buttonOrderSell3_Click(object sender, EventArgs e)
+        {
+            BuySell504010(false);
+        }
+
+        private void buttonBuy100_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(true, 100);
+        }
+
+        private void buttonBuy60_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(true, 60);
+        }
+
+        private void buttonBuy30_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(true, 30);
+        }
+
+        private void buttonBuy10_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(true, 10);
+        }
+
+        private void buttonSell100_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(false, 100);
+        }
+
+        private void buttonSell60_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(false, 60);
+        }
+
+        private void buttonSell30_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(false, 30);
+        }
+
+        private void buttonSell10_Click(object sender, EventArgs e)
+        {
+            BuySellPercent(false, 10);
+        }
+
+        //public void ShowLabelConnected(bool connected)
+        //{
+        //	if (connected)
+        //	{
+        //		labelConnected.Text = "**********";
+        //		labelConnected.ForeColor = Color.Green;
+        //	}
+        //	else
+        //	{
+        //		labelConnected.Text = "-----------";
+        //		labelConnected.ForeColor = Color.Red;
+        //	}
+        //}
+
+        // Add these fields to your FormTradingPanel class:
+        private System.Windows.Forms.Timer? timerLabelConnected;
+        private int labelConnectedPos = 0;
+        private int labelConnectedDir = 1;
+        private const int labelConnectedMax = 12; // Adjust for the width you want
+
+        public void ShowLabelConnected(bool connected)
+        {
+            if (connected)
+            {
+                // Start animation
+                if (timerLabelConnected == null)
+                {
+                    timerLabelConnected = new System.Windows.Forms.Timer();
+                    timerLabelConnected.Interval = 500; // Animation speed in ms
+                    timerLabelConnected.Tick += TimerLabelConnected_Tick;
+                    labelConnectedPos = 0;
+                    labelConnectedDir = 1;
+                    timerLabelConnected.Start();
+                    labelConnected.ForeColor = Color.Green;
+                }
+            }
+            else
+            {
+                // Stop animation and show static disconnected state
+                timerLabelConnected?.Stop();
+                timerLabelConnected = null;
+                labelConnected.Text = "[-----------]";
+                labelConnected.ForeColor = Color.Red;
+            }
+        }
+
+        private void TimerLabelConnected_Tick(object? sender, EventArgs e)
+        {
+            // Build the string with spaces and one asterisk
+            labelConnected.Text = "[" + new string(' ', labelConnectedPos) + "-" + new string(' ', labelConnectedMax - labelConnectedPos) + "]";
+            // Move position
+            labelConnectedPos += labelConnectedDir;
+            if (labelConnectedPos >= labelConnectedMax)
+            {
+                labelConnectedDir = -1;
+                labelConnectedPos = labelConnectedMax;
+            }
+            else if (labelConnectedPos <= 0)
+            {
+                labelConnectedDir = 1;
+                labelConnectedPos = 0;
+            }
+        }
+
+        private void closeAll(bool allOrders)
+        {
+            SlToBeAutomation = false;
+
+            Orders orders = MetatraderInstance.Instance.GetMarketOrders(allOrders);
+            foreach (var order in orders)
+            {
+                MetatraderInstance.Instance.CloseMarketOrder(order.Id);
+            }
+            orders = MetatraderInstance.Instance.GetPendingOrders(allOrders);
+            foreach (var order in orders)
+            {
+                MetatraderInstance.Instance.ClosePendingOrder(order.Id);
+            }
+            //MetatraderInstance.Instance.CloseAllPendingOrders();
+        }
+
+        private void buttonCloseAll_Click(object sender, EventArgs e)
+        {
+            var dlg = new ConfirmDialog("Do you really close all orders?");
+            var result = dlg.ShowDialog();
+            if (result == DialogResult.Yes)
+            {
+                closeAll(false);
+            }
+        }
+
+        private void checkBoxPendingOrder_CheckedChanged(object sender, EventArgs e)
+        {
+            textBoxPrice.Enabled = checkBoxPendingOrder.Checked;
+        }
+
+        private void buttonSetTp15_Click(object sender, EventArgs e)
+        {
+            double counter;
+            Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+            if (orders.Any())
+            {
+                counter = 1.5;
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter += 0.5;
+                }
+                RefreshData(orders);
+            }
+            else
+            {
+                counter = 1.5;
+                orders = MetatraderInstance.Instance.GetPendingOrders();
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter += 0.5;
+                }
+                RefreshData(orders);
+            }
+        }
+
+        private void buttonSetTp20_Click(object sender, EventArgs e)
+        {
+            double counter;
+            Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+            if (orders.Any())
+            {
+                counter = 2.0;
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter += 0.5;
+                }
+                RefreshData(orders);
+            }
+            else
+            {
+                counter = 2.0;
+                orders = MetatraderInstance.Instance.GetPendingOrders();
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter += 0.5;
+                }
+                RefreshData(orders);
+            }
+        }
+
+        private void buttonSetTp_Click(object sender, EventArgs e)
+        {
+            int counter;
+            Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+            if (orders.Any())
+            {
+                counter = 1;
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter++;
+                }
+                RefreshData(orders);
+            }
+            else
+            {
+                counter = 1;
+                orders = MetatraderInstance.Instance.GetPendingOrders();
+                foreach (var order in orders)
+                {
+                    MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+                    counter++;
+                }
+                RefreshData(orders);
+            }
+        }
+
+        private void FormTradingPanel_Load(object sender, EventArgs e)
+        {
+            checkBoxBlink.Checked = true;
+
+            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+            bool connected = MetatraderInstance.Connect();
+            ShowLabelConnected(connected);
+
+            checkBoxMovePendingOrder.Checked = false;
+            checkBoxPendingOrder.Checked = false;
+            textBoxPrice.Enabled = false;
+
+            textBoxSlDistance.Text = String.Empty; //"0.5";
+            checkBoxAlwaysOnTop.Checked = true;
+
+            this.TopMost = true;
+
+            SlToBeAutomation = false;
+            progressBarSlToBeAutomation.Value = 0;
+            progressBarSlToHalfAutomation.Value = 0;
+            progressBarSlPtMonitoring.Value = 0;
+
+            trackBarPositionUsing.Value = Utils.Utilities.TrackBarPositionUsing;
+            trackBarPositionUsing_ValueChanged(null, null);
+
+            timerRefreshLabels.Interval = 1000;
+
+            checkBoxAutoCloseTrades.Checked = true;
+
+            //string currency = MetatraderInstance.Instance.AccountCurrency();
+            //this.Text = "SvpTradingPanel: "
+            //	+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
+            //	+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
+            //	+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName) 
+            //	+ ", " + (Utilities.AccountEquity == 0 ? String.Empty : Utilities.AccountEquity + currency + ", ") 
+            //	+ Utilities.RiskToTrade * 100 + "%, " 
+            //	+ Utilities.BrokerMarginEquityCoefficient + "x, "
+            //	+ Utilities.TrackBarPositionUsing + "%, "
+            //	+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
+        }
+
+        private enum HueType
+        {
+            Stoploss,
+            Takeprofit,
+            Hue
+        };
+
+        private void CallHue(HueType HueType)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    string url;
+                    if (HueType == HueType.Takeprofit)
+                    {
+                        url = "http://localhost/huePt";
+                    }
+                    else if (HueType == HueType.Stoploss)
+                    {
+                        url = "http://localhost/hueSl";
+                    }
+                    else if (HueType == HueType.Hue)
+                    {
+                        url = "http://localhost/hue";
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    var body = "Trades close after 10:30 p.m.";
+                    var content = new StringContent(body);
+                    var response = client.PostAsync(url, content).GetAwaiter().GetResult();
+                }
+            }
+            catch (Exception) { }
+        }
+
+        // Po ukonceni prvniho TP se posune SL na BE u vsech obchodu.
+        private void SlAutomation()
+        {
+            if (SlToBeAutomation)
+            {
+                switch (SlToBeAutomationType)
+                {
+                    case SlTypeEnum.Monitoring:
+                        if (progressBarSlPtMonitoring.Value == 100)
+                        {
+                            progressBarSlPtMonitoring.Value = 0;
+                        }
+                        else
+                        {
+                            progressBarSlPtMonitoring.Value += SlToBeAutomationProgressIncrementConstant;
+                        }
+                        break;
+                    case SlTypeEnum.BreakEven:
+                        if (progressBarSlToBeAutomation.Value == 100)
+                        {
+                            progressBarSlToBeAutomation.Value = 0;
+                        }
+                        else
+                        {
+                            progressBarSlToBeAutomation.Value += SlToBeAutomationProgressIncrementConstant;
+                        }
+                        break;
+                    case SlTypeEnum.Half:
+                        if (progressBarSlToHalfAutomation.Value == 100)
+                        {
+                            progressBarSlToHalfAutomation.Value = 0;
+                        }
+                        else
+                        {
+                            progressBarSlToHalfAutomation.Value += SlToBeAutomationProgressIncrementConstant;
+                        }
+                        break;
+                }
+
+                Orders orders = MetatraderInstance.Instance.GetMarketOrders(true);
+
+                if (SlToBeAutomationOrders.Count != orders.Count)
+                {
+                    Task.Delay(5000); // Cekani na pripadne uzavreni vsech pozic.
+
+                    orders = MetatraderInstance.Instance.GetMarketOrders(true);
+
+                    foreach (var instrument in SlToBeAutomationOrders.Select(x => x.Instrument).Distinct())
+                    {
+                        var slToBeAutomationOrdersByInstrument = SlToBeAutomationOrders.Where(x => x.Instrument == instrument).ToList();
+                        var ordersByInstrument = MetatraderInstance.Instance.GetMarketOrders(true).Where(x => x.Instrument == instrument).ToList();
+
+                        if (slToBeAutomationOrdersByInstrument.Count() > ordersByInstrument.Count())
+                        {
+                            (string? instrument, double profit) result = MetatraderInstance.Instance.GetLatestProfit(instrument);
+                            if (instrument != null)
+                            {
+                                if (checkBoxBlink.Checked)
+                                {
+                                    CallHue(result.profit >= 0 ? HueType.Takeprofit : HueType.Stoploss);
+                                }
+                            }
+
+                            if (SlToBeAutomationType == SlTypeEnum.BreakEven && (ordersByInstrument.Count > 0))
+                            {
+                                foreach (var order in ordersByInstrument)
+                                {
+                                    order.SL = order.OpenPrice;
+                                    try
+                                    {
+                                        MetatraderInstance.Instance.SetPositionSlAndPt(order);
+                                    }
+                                    catch
+                                    {
+                                        // nothing to do.
+                                    }
+                                }
+                            }
+
+                            if (SlToBeAutomationType == SlTypeEnum.Half && (ordersByInstrument.Count > 0))
+                            {
+                                foreach (var order in ordersByInstrument)
+                                {
+                                    if (order.Units > 0)
+                                    {
+                                        order.SL = order.OpenPrice - (order.OpenPrice - order.SL) / 2;
+                                    }
+                                    else
+                                    {
+                                        order.SL = order.OpenPrice + (order.SL - order.OpenPrice) / 2;
+                                    }
+
+                                    /*
 																		// Nejde pouzit v pripade 3 obchodu, kdy pri druhem prodeji by se nastavil nesmyslny SL.
 																		// Proto pouzivame polovicni SL.
 																		if (result != null && result.Value.profit >= 2)
@@ -1154,174 +1181,174 @@ namespace SvpTradingPanel
 																			double distance = ((result.Value.profit / MetatraderInstance.Instance.SymbolTradeTickValue()) * MetatraderInstance.Instance.SymbolPoint()) / ordersByInstrument.Sum(x => Math.Abs(x.Units));
 									*/
 
-									try
-									{
-										MetatraderInstance.Instance.SetPositionSlAndPt(order);
-									}
-									catch
-									{
-										// nothing to do.
-									}
-								}
-							}
-						}
-					}
+                                    try
+                                    {
+                                        MetatraderInstance.Instance.SetPositionSlAndPt(order);
+                                    }
+                                    catch
+                                    {
+                                        // nothing to do.
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-					SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
-				}
+                    SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
+                }
 
-				if (!SlToBeAutomationOrders.Any())
-				{
-					SlToBeAutomation = false;
-				}
-			}
-			if (SlToBeAutomation)
-			{
-				switch (SlToBeAutomationType)
-				{
-					case SlTypeEnum.Monitoring:
-						progressBarSlToBeAutomation.Value = 0;
-						progressBarSlToHalfAutomation.Value = 0;
-						break;
-					case SlTypeEnum.BreakEven:
-						progressBarSlToHalfAutomation.Value = 0;
-						progressBarSlPtMonitoring.Value = 0;
-						break;
-					case SlTypeEnum.Half:
-						progressBarSlToBeAutomation.Value = 0;
-						progressBarSlPtMonitoring.Value = 0;
-						break;
-				}
-			}
-			else
-			{
-				progressBarSlToBeAutomation.Value = 0;
-				progressBarSlPtMonitoring.Value = 0;
-				progressBarSlToHalfAutomation.Value = 0;
-			}
-		}
+                if (!SlToBeAutomationOrders.Any())
+                {
+                    SlToBeAutomation = false;
+                }
+            }
+            if (SlToBeAutomation)
+            {
+                switch (SlToBeAutomationType)
+                {
+                    case SlTypeEnum.Monitoring:
+                        progressBarSlToBeAutomation.Value = 0;
+                        progressBarSlToHalfAutomation.Value = 0;
+                        break;
+                    case SlTypeEnum.BreakEven:
+                        progressBarSlToHalfAutomation.Value = 0;
+                        progressBarSlPtMonitoring.Value = 0;
+                        break;
+                    case SlTypeEnum.Half:
+                        progressBarSlToBeAutomation.Value = 0;
+                        progressBarSlPtMonitoring.Value = 0;
+                        break;
+                }
+            }
+            else
+            {
+                progressBarSlToBeAutomation.Value = 0;
+                progressBarSlPtMonitoring.Value = 0;
+                progressBarSlToHalfAutomation.Value = 0;
+            }
+        }
 
-		private int blinkOnEveningLastTriggeredMinute = -1;
+        private int blinkOnEveningLastTriggeredMinute = -1;
 
-		private void BlinkOnEvening()
-		{
-			try
-			{
-				DateTime now = DateTime.Now;
+        private void BlinkOnEvening()
+        {
+            try
+            {
+                DateTime now = DateTime.Now;
 
-				// časový interval 22:30–22:55
-				if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 55)
-				{
-					if (checkBoxBlink.Checked)
-					{
-						// každých 5 minut => minuta dělitelná 5
-						if (now.Minute % 5 == 0)
-						{
-							// spustit pouze pokud to ještě nebylo v této minutě spuštěno
-							if (blinkOnEveningLastTriggeredMinute != now.Minute)
-							{
-								CallHue(HueType.Hue);
-								blinkOnEveningLastTriggeredMinute = now.Minute;
-							}
-						}
-					}
-				}
-			}
-			catch { }
-		}
+                // časový interval 22:30–22:55
+                if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 55)
+                {
+                    if (checkBoxBlink.Checked)
+                    {
+                        // každých 5 minut => minuta dělitelná 5
+                        if (now.Minute % 5 == 0)
+                        {
+                            // spustit pouze pokud to ještě nebylo v této minutě spuštěno
+                            if (blinkOnEveningLastTriggeredMinute != now.Minute)
+                            {
+                                CallHue(HueType.Hue);
+                                blinkOnEveningLastTriggeredMinute = now.Minute;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
 
-		private int autoCloseTradesLastTriggeredMinute = -1;
+        private int autoCloseTradesLastTriggeredMinute = -1;
 
-		private void AutoCloseTrades()
-		{
-			if (checkBoxAutoCloseTrades.Checked)
-			{
-				try
-				{
-					DateTime now = DateTime.Now;
+        private void AutoCloseTrades()
+        {
+            if (checkBoxAutoCloseTrades.Checked)
+            {
+                try
+                {
+                    DateTime now = DateTime.Now;
 
-					// časový interval 22:30–22:55
-					if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 45)
-					{
-						// každých 5 minut => minuta dělitelná 5
-						if (now.Minute % 5 == 0)
-						{
-							// spustit pouze pokud to ještě nebylo v této minutě spuštěno
-							if (autoCloseTradesLastTriggeredMinute != now.Minute)
-							{
-								closeAll(true);
-								autoCloseTradesLastTriggeredMinute = now.Minute;
-							}
-						}
-					}
-				}
-				catch { }
-			}
-		}
+                    // časový interval 22:30–22:55
+                    if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 45)
+                    {
+                        // každých 5 minut => minuta dělitelná 5
+                        if (now.Minute % 5 == 0)
+                        {
+                            // spustit pouze pokud to ještě nebylo v této minutě spuštěno
+                            if (autoCloseTradesLastTriggeredMinute != now.Minute)
+                            {
+                                closeAll(true);
+                                autoCloseTradesLastTriggeredMinute = now.Minute;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
 
-		private void timerRefreshLabels_Tick(object sender, EventArgs e)
-		{
-			bool connected = MetatraderInstance.IsConnected();
-			if (connected)
-			{
-				connected = MetatraderInstance.Instance.IsConnected();
-				if (connected)
-				{
-					try
-					{
-						if (MetatraderInstance.Instance.SymbolName("USDCZK") == null)
-						{
-							Environment.Exit(1);
-						}
-						Orders orders = MetatraderInstance.Instance.GetMarketOrders();
-						if (!orders.Any())
-						{
-							orders = MetatraderInstance.Instance.GetPendingOrders();
-						}
-						RefreshData(orders);
+        private void timerRefreshLabels_Tick(object sender, EventArgs e)
+        {
+            bool connected = MetatraderInstance.IsConnected();
+            if (connected)
+            {
+                connected = MetatraderInstance.Instance.IsConnected();
+                if (connected)
+                {
+                    try
+                    {
+                        if (MetatraderInstance.Instance.SymbolName("USDCZK") == null)
+                        {
+                            Environment.Exit(1);
+                        }
+                        Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+                        if (!orders.Any())
+                        {
+                            orders = MetatraderInstance.Instance.GetPendingOrders();
+                        }
+                        RefreshData(orders);
 
-						SlAutomation();
+                        SlAutomation();
 
-						if (this.labelSvpTradingPanel.Text == "...")
-						{
-							string currency = MetatraderInstance.Instance.AccountCurrency();
+                        if (this.labelSvpTradingPanel.Text == "...")
+                        {
+                            string currency = MetatraderInstance.Instance.AccountCurrency();
                             double accountEquity = MetatraderInstance.Instance.AccountEquity();
-							this.labelSvpTradingPanel.Text = "Settings: "
-								+ ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
-								+ ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
-								+ ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
-								+ ", " + (Utilities.AccountEquity == 0 ? accountEquity.ToString("F2") + " " + currency + ", " : Utilities.AccountEquity + " " + currency + ", ")
-								+ Utilities.RiskToTrade * 100 + "%, "
-								+ Utilities.BrokerMarginEquityCoefficient + "x, "
-								+ Utilities.TrackBarPositionUsing + "%, "
-								+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
+                            this.labelSvpTradingPanel.Text = "Settings: "
+                                + ((Utilities.MetatraderType == MetatraderType.Mt4) ? "MT4" : "MT5")
+                                + ", " + ((Utilities.MetatraderType == MetatraderType.Mt4) ? Utilities.PortMt4 : Utilities.PortMt5)
+                                + ", " + (String.IsNullOrWhiteSpace(Utilities.StrategyName) ? "strategy name not defined" : Utilities.StrategyName)
+                                + ", " + (Utilities.AccountEquity == 0 ? accountEquity.ToString("F2") + " " + currency + ", " : Utilities.AccountEquity + " " + currency + ", ")
+                                + Utilities.RiskToTrade * 100 + "%, "
+                                + Utilities.BrokerMarginEquityCoefficient + "x, "
+                                + Utilities.TrackBarPositionUsing + "%, "
+                                + (Utilities.TickValueCompensation ? "Ano" : "Ne");
 
-							string buildDateTime = GetBuildDateTime().ToString("dd.MM.yyyy HH:mm");
-							this.Text = "SvpTradingPanel Core (" + buildDateTime + ")";
-						}
+                            string buildDateTime = GetBuildDateTime().ToString("dd.MM.yyyy HH:mm");
+                            this.Text = "SvpTradingPanel Core (" + buildDateTime + ")";
+                        }
 
-						BlinkOnEvening();
+                        BlinkOnEvening();
 
-						AutoCloseTrades();
-					}
-					catch (Exception ex)
-					{
-						Logger.WriteLineError(ex.ToString());
-					}
-				}
-				else
-				{
-					MetatraderInstance.Instance.Disconnect();
-					MetatraderInstance.Instance.Connect();
-				}
-			}
-			ShowLabelConnected(connected);
-		}
+                        AutoCloseTrades();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.WriteLineError(ex.ToString());
+                    }
+                }
+                else
+                {
+                    MetatraderInstance.Instance.Disconnect();
+                    MetatraderInstance.Instance.Connect();
+                }
+            }
+            ShowLabelConnected(connected);
+        }
 
-		private double GetTrackBarPositionUsingPercent()
-		{
-			return trackBarPositionUsing.Value;
-			/*
+        private double GetTrackBarPositionUsingPercent()
+        {
+            return trackBarPositionUsing.Value;
+            /*
 						switch (trackBarPositionUsing.Value)
 						{
 							case 0: return 10;
@@ -1338,60 +1365,60 @@ namespace SvpTradingPanel
 							default: throw new Exception();
 						}
 			*/
-		}
+        }
 
-		private void trackBarPositionUsing_ValueChanged(object? sender, EventArgs? e)
-		{
-			labelPositionUsingPercent.Text = GetTrackBarPositionUsingPercent().ToString() + " %";
-			RefreshLabelSlLoss();
-		}
+        private void trackBarPositionUsing_ValueChanged(object? sender, EventArgs? e)
+        {
+            labelPositionUsingPercent.Text = GetTrackBarPositionUsingPercent().ToString() + " %";
+            RefreshLabelSlLoss();
+        }
 
-		private void buttonSlToBeAutomation_Click(object sender, EventArgs e)
-		{
-			SlToBeAutomation = !SlToBeAutomation;
+        private void buttonSlToBeAutomation_Click(object sender, EventArgs e)
+        {
+            SlToBeAutomation = !SlToBeAutomation;
 
-			SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
+            SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
 
-			SlToBeAutomationType = SlTypeEnum.BreakEven;
-		}
+            SlToBeAutomationType = SlTypeEnum.BreakEven;
+        }
 
-		private void buttonSlToHalfAutomation_Click(object sender, EventArgs e)
-		{
-			SlToBeAutomation = !SlToBeAutomation;
+        private void buttonSlToHalfAutomation_Click(object sender, EventArgs e)
+        {
+            SlToBeAutomation = !SlToBeAutomation;
 
-			SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
+            SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
 
-			SlToBeAutomationType = SlTypeEnum.Half;
-		}
+            SlToBeAutomationType = SlTypeEnum.Half;
+        }
 
-		private void buttonSlPtMonitoring_Click(object sender, EventArgs e)
-		{
-			SlToBeAutomation = !SlToBeAutomation;
+        private void buttonSlPtMonitoring_Click(object sender, EventArgs e)
+        {
+            SlToBeAutomation = !SlToBeAutomation;
 
-			SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
+            SlToBeAutomationOrders = MetatraderInstance.Instance.GetMarketOrders(true);
 
-			SlToBeAutomationType = SlTypeEnum.Monitoring;
-		}
+            SlToBeAutomationType = SlTypeEnum.Monitoring;
+        }
 
-		private void buttonEquity_Click(object sender, EventArgs e)
-		{
-			FormEquity formEquity = new FormEquity();
-			formEquity.MainWindowTopMost = checkBoxAlwaysOnTop.Checked;
-			formEquity.ShowDialog();
-		}
+        private void buttonEquity_Click(object sender, EventArgs e)
+        {
+            FormEquity formEquity = new FormEquity();
+            formEquity.MainWindowTopMost = checkBoxAlwaysOnTop.Checked;
+            formEquity.ShowDialog();
+        }
 
-		private void buttonCallHueTest_Click(object sender, EventArgs e)
-		{
-			CallHue(HueType.Hue);
-		}
+        private void buttonCallHueTest_Click(object sender, EventArgs e)
+        {
+            CallHue(HueType.Hue);
+        }
 
-		private void FormTradingPanel_FormClosing(object sender, FormClosingEventArgs e)
-		{
-			e.Cancel = true;
-			timerLabelConnected?.Stop();
-			timerRefreshLabels?.Stop();
-			MetatraderInstance.Instance?.Disconnect();
-			Environment.Exit(0);
-		}
-	}
+        private void FormTradingPanel_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            timerLabelConnected?.Stop();
+            timerRefreshLabels?.Stop();
+            MetatraderInstance.Instance?.Disconnect();
+            Environment.Exit(0);
+        }
+    }
 }
