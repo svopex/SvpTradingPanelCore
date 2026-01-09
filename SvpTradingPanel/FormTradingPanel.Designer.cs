@@ -458,7 +458,7 @@
             buttonSetTp.Name = "buttonSetTp";
             buttonSetTp.Size = new Size(173, 101);
             buttonSetTp.TabIndex = 81;
-            buttonSetTp.Text = "Set TP";
+            buttonSetTp.Text = "Set TP 1,2,3";
             buttonSetTp.UseVisualStyleBackColor = true;
             buttonSetTp.Click += buttonSetTp_Click;
             // 
@@ -653,7 +653,7 @@
             buttonSetTp15.Name = "buttonSetTp15";
             buttonSetTp15.Size = new Size(172, 101);
             buttonSetTp15.TabIndex = 99;
-            buttonSetTp15.Text = "Set TP 1.5";
+            buttonSetTp15.Text = "Set TP 1.5,2,2.5";
             buttonSetTp15.UseVisualStyleBackColor = true;
             buttonSetTp15.Click += buttonSetTp15_Click;
             // 
@@ -685,7 +685,7 @@
             buttonSetTp20.Name = "buttonSetTp20";
             buttonSetTp20.Size = new Size(165, 101);
             buttonSetTp20.TabIndex = 102;
-            buttonSetTp20.Text = "Set TP 2.0";
+            buttonSetTp20.Text = "Set TP 2,2.5,3";
             buttonSetTp20.UseVisualStyleBackColor = true;
             buttonSetTp20.Click += buttonSetTp20_Click;
             // 
