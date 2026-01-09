@@ -919,7 +919,35 @@ namespace SvpTradingPanel
             textBoxPrice.Enabled = checkBoxPendingOrder.Checked;
         }
 
-        private void buttonSetTp15_Click(object sender, EventArgs e)
+		private void buttonSetTp1_Click(object sender, EventArgs e)
+		{
+			double counter;
+			Orders orders = MetatraderInstance.Instance.GetMarketOrders();
+			if (orders.Any())
+			{
+				counter = 1;
+				foreach (var order in orders)
+				{
+					MetatraderInstance.Instance.SetPositionSlAndPtRelative/*.SetPositionSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+					counter += 0.5;
+				}
+				RefreshData(orders);
+			}
+			else
+			{
+				counter = 1;
+				orders = MetatraderInstance.Instance.GetPendingOrders();
+				foreach (var order in orders)
+				{
+					MetatraderInstance.Instance.SetPendingOrderSlAndPtRelative/*.SetPendingOrderSlAndPtPercent*/(order, 0, counter * Math.Abs(order.OpenPrice - order.SL) /*GetTpDistanceByUnit(orders, Math.Abs(order.Units))*/);
+					counter += 0.5;
+				}
+				RefreshData(orders);
+			}
+		}
+
+
+		private void buttonSetTp15_Click(object sender, EventArgs e)
         {
             double counter;
             Orders orders = MetatraderInstance.Instance.GetMarketOrders();

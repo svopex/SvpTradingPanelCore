@@ -87,6 +87,7 @@
             checkBoxAutoCloseTrades = new CheckBox();
             labelSvpTradingPanel = new Label();
             buttonSetTp20 = new Button();
+            buttonSetTp1 = new Button();
             ((System.ComponentModel.ISupportInitialize)trackBarPositionUsing).BeginInit();
             SuspendLayout();
             // 
@@ -453,7 +454,7 @@
             // 
             // buttonSetTp
             // 
-            buttonSetTp.Location = new Point(457, 800);
+            buttonSetTp.Location = new Point(457, 689);
             buttonSetTp.Margin = new Padding(4, 5, 4, 5);
             buttonSetTp.Name = "buttonSetTp";
             buttonSetTp.Size = new Size(173, 101);
@@ -689,11 +690,23 @@
             buttonSetTp20.UseVisualStyleBackColor = true;
             buttonSetTp20.Click += buttonSetTp20_Click;
             // 
+            // buttonSetTp1
+            // 
+            buttonSetTp1.Location = new Point(457, 800);
+            buttonSetTp1.Margin = new Padding(4, 5, 4, 5);
+            buttonSetTp1.Name = "buttonSetTp1";
+            buttonSetTp1.Size = new Size(173, 101);
+            buttonSetTp1.TabIndex = 103;
+            buttonSetTp1.Text = "Set TP 1,1.5,2";
+            buttonSetTp1.UseVisualStyleBackColor = true;
+            buttonSetTp1.Click += buttonSetTp1_Click;
+            // 
             // FormTradingPanel
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1000, 1379);
+            Controls.Add(buttonSetTp1);
             Controls.Add(buttonSetTp20);
             Controls.Add(labelSvpTradingPanel);
             Controls.Add(checkBoxAutoCloseTrades);
@@ -823,6 +836,7 @@
 		private CheckBox checkBoxAutoCloseTrades;
 		private Label labelSvpTradingPanel;
         private Button buttonSetTp20;
+        private Button buttonSetTp1;
     }
 }
 
