@@ -1055,7 +1055,7 @@ namespace SvpTradingPanel
 
             timerRefreshLabels.Interval = 1000;
 
-            checkBoxAutoCloseTrades.Checked = true;
+            checkBoxAutoCloseTrades.Checked = false;
 
             //string currency = MetatraderInstance.Instance.AccountCurrency();
             //this.Text = "SvpTradingPanel: "
