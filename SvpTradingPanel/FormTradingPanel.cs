@@ -1042,9 +1042,8 @@ namespace SvpTradingPanel
             textBoxPrice.Enabled = false;
 
             textBoxSlDistance.Text = String.Empty; //"0.5";
-            checkBoxAlwaysOnTop.Checked = true;
-
-            this.TopMost = true;
+            checkBoxAlwaysOnTop.Checked = false;
+			this.TopMost = checkBoxAlwaysOnTop.Checked;
 
             SlToBeAutomation = false;
             progressBarSlToBeAutomation.Value = 0;
