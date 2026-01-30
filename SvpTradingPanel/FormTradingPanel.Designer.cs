@@ -466,12 +466,12 @@
             // trackBarPositionUsing
             // 
             trackBarPositionUsing.LargeChange = 50;
-            trackBarPositionUsing.Location = new Point(171, 294);
+            trackBarPositionUsing.Location = new Point(204, 307);
             trackBarPositionUsing.Margin = new Padding(4, 5, 4, 5);
             trackBarPositionUsing.Maximum = 300;
             trackBarPositionUsing.Minimum = 10;
             trackBarPositionUsing.Name = "trackBarPositionUsing";
-            trackBarPositionUsing.Size = new Size(840, 90);
+            trackBarPositionUsing.Size = new Size(767, 90);
             trackBarPositionUsing.SmallChange = 10;
             trackBarPositionUsing.TabIndex = 6;
             trackBarPositionUsing.Value = 100;
