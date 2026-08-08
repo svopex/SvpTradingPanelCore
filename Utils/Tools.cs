@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,25 @@ namespace Utils
 	public class Utilities
 	{
 		private const int Parameters = 8;
+
+		// Argumenty z prikazove radky jsou vzdy v invariantnim formatu (desetinna tecka),
+		// nezavisle na nastaveni kultury Windows.
+		private static double ParseDouble(string value) => Double.Parse(value, CultureInfo.InvariantCulture);
+
+		private static int ParseInt(string value) => Int32.Parse(value, CultureInfo.InvariantCulture);
+
+		// Rucne zadana hodnota z textboxu - prijima tecku i carku jako desetinny oddelovac,
+		// aby na ceske klavesnici fungovaly obe varianty.
+		public static bool TryParseUserDouble(string? value, out double result)
+		{
+			result = 0;
+			if (String.IsNullOrWhiteSpace(value))
+			{
+				return false;
+			}
+			string normalized = value.Trim().Replace(',', '.');
+			return Double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+		}
 
 		/*
 		MT5 8228 SvpTradingPanel 0 0.01 1 100 0
@@ -34,7 +54,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Int32.Parse(args[8]) == 1;
+					return ParseInt(args[8]) == 1;
 				}
 				else
 				{
@@ -50,7 +70,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Int32.Parse(args[7]);
+					return ParseInt(args[7]);
 				}
 				else
 				{
@@ -66,7 +86,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Double.Parse(args[4]);
+					return ParseDouble(args[4]);
 				}
 				else
 				{
@@ -83,7 +103,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Double.Parse(args[5]);
+					return ParseDouble(args[5]);
 				}
 				else
 				{
@@ -100,7 +120,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Double.Parse(args[6]);
+					return ParseDouble(args[6]);
 				}
 				else
 				{
@@ -117,7 +137,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Int32.Parse(args[2]);
+					return ParseInt(args[2]);
 				}
 				else
 				{
@@ -132,7 +152,7 @@ namespace Utils
 				string[] args = Environment.GetCommandLineArgs();
 				if (args.Length > Parameters)
 				{
-					return Int32.Parse(args[2]);
+					return ParseInt(args[2]);
 				}
 				else
 				{

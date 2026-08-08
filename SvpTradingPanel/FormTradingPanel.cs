@@ -130,13 +130,17 @@ namespace SvpTradingPanel
             labelPs.Text = "Position size: " + Math.Round(Math.Abs(ps), 2);
             double tv = MetatraderInstance.Instance.SymbolTradeTickValue();
             labelTickValue.Text = "Tick value: " + Math.Round(tv, 2);
-            if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
+            switch (MetatraderInstance.Instance.AccountCurrency().ToUpper())
             {
-                labelUsdCzk.Text = "USD/CZK: " + Math.Round(MainAccountCourse(), 2);
-            }
-            else
-            {
-                labelUsdCzk.Text = "USD/USD: " + Math.Round(MainAccountCourse(), 2);
+                case "CZK":
+                    labelUsdCzk.Text = "USD/CZK: " + Math.Round(MainAccountCourse(), 2);
+                    break;
+                case "EUR":
+                    labelUsdCzk.Text = "USD/EUR: " + Math.Round(MainAccountCourse(), 4);
+                    break;
+                default:
+                    labelUsdCzk.Text = "USD/USD: " + Math.Round(MainAccountCourse(), 2);
+                    break;
             }
             labelContractSize.Text = "Contract size: " + MetatraderInstance.Instance.ContractSize();
             RefreshLabelSlLoss();
@@ -145,7 +149,7 @@ namespace SvpTradingPanel
 
         private double? GetPrice(bool buy)
         {
-            if (Double.TryParse(textBoxPrice.Text, out double price))
+            if (Utilities.TryParseUserDouble(textBoxPrice.Text, out double price))
             {
                 return price;
             }
@@ -202,7 +206,7 @@ namespace SvpTradingPanel
             Orders marketOrders = MetatraderInstance.Instance.GetMarketOrders();
             Orders pendingOrders = MetatraderInstance.Instance.GetPendingOrders();
             bool result =
-                (Double.TryParse(textBoxSlDistance.Text, out double positionSize) // Je validni velikost pozice v textboxu?
+                (Utilities.TryParseUserDouble(textBoxSlDistance.Text, out double positionSize) // Je validni velikost pozice v textboxu?
                 && (positionSize * 0.1 > 0) // Je validni velikost pozice v textboxu?
                 && ((IsPossibleBuy(marketOrders, pendingOrders) && buy) || (IsPossibleSell(marketOrders, pendingOrders) && !buy)) // Pokud je jiz otevrena pozice, nova pozice musi byt stejnejo typu (buy/sell).
                 );
@@ -244,17 +248,39 @@ namespace SvpTradingPanel
             return iso4217.Contains(baseCurrency) && iso4217.Contains(quoteCurrency);
         }
 
+        // Symbol potrebny pro prepocet tick value (v USD) na menu uctu, null pokud neni potreba.
+        private string? MainAccountCourseSymbol()
+        {
+            switch (MetatraderInstance.Instance.AccountCurrency().ToUpper())
+            {
+                case "CZK": return "USDCZK";
+                case "EUR": return "EURUSD";
+                default: return null;
+            }
+        }
+
         private double MainAccountCourse()
         {
-            if (MetatraderInstance.Instance.AccountCurrency().ToUpper() == "CZK")
-            {
-                return MetatraderInstance.Instance.GetActualBidPrice(MetatraderInstance.Instance.SymbolName("USDCZK"));
-            }
-            else
+            string? courseSymbol = MainAccountCourseSymbol();
+            if (courseSymbol == null)
             {
                 return 1;
             }
 
+            string? symbol = MetatraderInstance.Instance.SymbolName(courseSymbol);
+            if (symbol == null)
+            {
+                return 1;
+            }
+
+            double bid = MetatraderInstance.Instance.GetActualBidPrice(symbol);
+            if (bid <= 0)
+            {
+                return 1;
+            }
+
+            // Broker nabizi EURUSD, potrebuji ale kurz USD/EUR, proto prevracena hodnota.
+            return courseSymbol == "EURUSD" ? 1 / bid : bid;
         }
 
         private double? GetPositionSize(bool buy)
@@ -1069,6 +1095,8 @@ namespace SvpTradingPanel
             //	+ (Utilities.TickValueCompensation ? "Ano" : "Ne");
         }
 
+        private const string HueBaseUrl = "http://192.168.0.157:8082";
+
         private enum HueType
         {
             Stoploss,
@@ -1085,15 +1113,15 @@ namespace SvpTradingPanel
                     string url;
                     if (HueType == HueType.Takeprofit)
                     {
-                        url = "http://localhost/huePt";
+                        url = HueBaseUrl + "/huePt";
                     }
                     else if (HueType == HueType.Stoploss)
                     {
-                        url = "http://localhost/hueSl";
+                        url = HueBaseUrl + "/hueSl";
                     }
                     else if (HueType == HueType.Hue)
                     {
-                        url = "http://localhost/hue";
+                        url = HueBaseUrl + "/hue";
                     }
                     else
                     {
@@ -1286,6 +1314,8 @@ namespace SvpTradingPanel
 
         private int autoCloseTradesLastTriggeredMinute = -1;
 
+        private bool mainAccountCourseSymbolChecked;
+
         private void AutoCloseTrades()
         {
             if (checkBoxAutoCloseTrades.Checked)
@@ -1323,9 +1353,21 @@ namespace SvpTradingPanel
                 {
                     try
                     {
-                        if (MetatraderInstance.Instance.SymbolName("USDCZK") == null)
+                        // Kurz pro tick value kompenzaci se overuje jen jednou a jen kdyz je kompenzace zapnuta.
+                        if (!mainAccountCourseSymbolChecked)
                         {
-                            Environment.Exit(1);
+                            mainAccountCourseSymbolChecked = true;
+                            string? courseSymbol = MainAccountCourseSymbol();
+                            if (Utilities.TickValueCompensation
+                                && courseSymbol != null
+                                && MetatraderInstance.Instance.SymbolName(courseSymbol) == null)
+                            {
+                                MessageBox.Show("Broker nenabízí symbol " + courseSymbol
+                                    + ", tick value kompenzaci pro měnu účtu "
+                                    + MetatraderInstance.Instance.AccountCurrency() + " nelze spočítat.",
+                                    "SvpTradingPanel", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                Environment.Exit(1);
+                            }
                         }
                         Orders orders = MetatraderInstance.Instance.GetMarketOrders();
                         if (!orders.Any())
