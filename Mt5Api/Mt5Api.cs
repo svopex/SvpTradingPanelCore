@@ -391,27 +391,38 @@ namespace Mt5Api
 			return CreatePendingOrderSlPtRelative(Symbol, price, units, Utilities.StrategyNumber, Utilities.StrategyName, SlRelative, PtRelative);
 		}
 
+		/// <summary>
+		/// Typ pending orderu podle toho, kde lezi zadana cena vuci aktualni cene.
+		/// </summary>
+		private ENUM_ORDER_TYPE GetPendingOrderType(string symbol, double price, double units)
+		{
+			var tick = apiClient.SymbolInfoTick(symbol);
+			double actualPrice = tick == null ? 0 : (units > 0 ? tick.ask : tick.bid);
+			if (actualPrice <= 0)
+			{
+				// Zaloha, pokud tick neprijde.
+				actualPrice = apiClient.SymbolInfoDouble(symbol, units > 0
+					? ENUM_SYMBOL_INFO_DOUBLE.SYMBOL_ASK
+					: ENUM_SYMBOL_INFO_DOUBLE.SYMBOL_BID);
+			}
+			if (IsStopOrder(price, actualPrice, units))
+			{
+				return units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_STOP : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_STOP;
+			}
+			return units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_LIMIT : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_LIMIT;
+		}
+
 		public ulong CreatePendingOrderSlPtRelative(string instrument, double price, double units, ulong magic, string comment, double SlRelative, double PtRelative)
 		{
+			string symbol = TransformInstrument(instrument);
+			double normalizedPrice = NormalizeDouble(instrument, price);
 			MqlTradeRequest mqlTradeRequest = new MqlTradeRequest();
 			mqlTradeRequest.Action = ENUM_TRADE_REQUEST_ACTIONS.TRADE_ACTION_PENDING;
-			mqlTradeRequest.Symbol = TransformInstrument(instrument);
+			mqlTradeRequest.Symbol = symbol;
 			mqlTradeRequest.Volume = (double)Math.Abs(units);
-			mqlTradeRequest.Stoplimit = NormalizeDouble(instrument, price);
-			mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_LIMIT : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_LIMIT;
-			//switch (orderType)
-			//{
-			//	case OrderType.Limit:
-			//		mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_LIMIT : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_LIMIT;
-			//		break;
-			//	case OrderType.Stop:
-			//		mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_STOP : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_STOP;
-			//		break;
-			//	case OrderType.StopLimit:
-			//		mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY_STOP_LIMIT : ENUM_ORDER_TYPE.ORDER_TYPE_SELL_STOP_LIMIT;
-			//		break;
-			//}
-			mqlTradeRequest.Price = NormalizeDouble(instrument, price);
+			mqlTradeRequest.Stoplimit = normalizedPrice;
+			mqlTradeRequest.Type = GetPendingOrderType(symbol, normalizedPrice, units);
+			mqlTradeRequest.Price = normalizedPrice;
 			mqlTradeRequest.Magic = magic;
 			mqlTradeRequest.Comment = comment;
 			FillSlPt(mqlTradeRequest, SlRelative, PtRelative);

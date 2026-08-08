@@ -666,7 +666,7 @@
             checkBoxAutoCloseTrades.Name = "checkBoxAutoCloseTrades";
             checkBoxAutoCloseTrades.Size = new Size(321, 36);
             checkBoxAutoCloseTrades.TabIndex = 100;
-            checkBoxAutoCloseTrades.Text = "Auto close trades at 22:30";
+            checkBoxAutoCloseTrades.Text = "Auto close trades at 22:45";
             checkBoxAutoCloseTrades.UseVisualStyleBackColor = true;
             // 
             // labelSvpTradingPanel

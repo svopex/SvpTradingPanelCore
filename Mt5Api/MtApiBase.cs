@@ -6,6 +6,20 @@ namespace Mt5Api
 {
 	public class MtApiBase
 	{
+		/// <summary>
+		/// Pending order zadany nad aktualni cenou je buy stop (a sell limit),
+		/// zadany pod aktualni cenou je buy limit (a sell stop).
+		/// Pokud neni k dispozici aktualni cena, chovej se jako doposud (limit).
+		/// </summary>
+		protected static bool IsStopOrder(double price, double actualPrice, double units)
+		{
+			if (actualPrice <= 0)
+			{
+				return false;
+			}
+			return units > 0 ? price > actualPrice : price < actualPrice;
+		}
+
 		protected int CalculateCandlesFromSessionStart(int period)
 		{
 			int candles = CalculateCandlesFromSessionStartBase(period);

@@ -1337,8 +1337,8 @@ namespace SvpTradingPanel
                 {
                     DateTime now = DateTime.Now;
 
-                    // časový interval 22:30–22:55
-                    if (now.Hour == 22 && now.Minute >= 30 && now.Minute <= 45)
+                    // časový interval 22:45–22:55
+                    if (now.Hour == 22 && now.Minute >= 45 && now.Minute <= 55)
                     {
                         // každých 5 minut => minuta dělitelná 5
                         if (now.Minute % 5 == 0)

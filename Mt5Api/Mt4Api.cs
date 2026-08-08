@@ -389,9 +389,31 @@ namespace Mt4Api
 			return ticket;
 		}
 
+		/// <summary>
+		/// Typ pending orderu podle toho, kde lezi zadana cena vuci aktualni cene.
+		/// </summary>
+		private TradeOperation GetPendingOrderOperation(string instrument, double price, double units)
+		{
+			MtApi.MqlTick? tick = apiClient.SymbolInfoTick(instrument);
+			double actualPrice = tick == null ? 0 : (units > 0 ? tick.Ask : tick.Bid);
+			if (actualPrice <= 0)
+			{
+				// Zaloha, pokud tick neprijde.
+				actualPrice = apiClient.MarketInfo(instrument, units > 0
+					? MarketInfoModeType.MODE_ASK
+					: MarketInfoModeType.MODE_BID);
+			}
+			if (IsStopOrder(price, actualPrice, units))
+			{
+				return units > 0 ? TradeOperation.OP_BUYSTOP : TradeOperation.OP_SELLSTOP;
+			}
+			return units > 0 ? TradeOperation.OP_BUYLIMIT : TradeOperation.OP_SELLLIMIT;
+		}
+
 		public long CreatePendingOrder(string instrument, double price, double units, string comment, int magic)
 		{
-			int orderId = apiClient.OrderSend(instrument, units > 0 ? TradeOperation.OP_BUYLIMIT : TradeOperation.OP_SELLLIMIT, Math.Abs(units), NormalizeDouble(Symbol, price), slippage, 0, 0, comment, magic);
+			double normalizedPrice = NormalizeDouble(Symbol, price);
+			int orderId = apiClient.OrderSend(instrument, GetPendingOrderOperation(instrument, normalizedPrice, units), Math.Abs(units), normalizedPrice, slippage, 0, 0, comment, magic);
 			return orderId;
 		}
 
@@ -468,14 +490,16 @@ namespace Mt4Api
 			List<MtOrder> mtOrders = apiClient.GetOrders(OrderSelectSource.MODE_TRADES);
 			foreach (MtOrder mtOrder in mtOrders)
 			{
-				if (mtOrder.Operation == TradeOperation.OP_BUYLIMIT || mtOrder.Operation == TradeOperation.OP_SELLLIMIT)
+				bool pendingBuy = mtOrder.Operation == TradeOperation.OP_BUYLIMIT || mtOrder.Operation == TradeOperation.OP_BUYSTOP;
+				bool pendingSell = mtOrder.Operation == TradeOperation.OP_SELLLIMIT || mtOrder.Operation == TradeOperation.OP_SELLSTOP;
+				if (pendingBuy || pendingSell)
 				{
 					Order order = new Order();
 					order.Id = mtOrder.Ticket;
 					order.OpenPrice = mtOrder.OpenPrice;
 					order.CurrentPrice = mtOrder.ClosePrice;
 					order.OpenTime = mtOrder.OpenTime;
-					order.Units = mtOrder.Operation == TradeOperation.OP_BUYLIMIT ? mtOrder.Lots : -mtOrder.Lots;
+					order.Units = pendingBuy ? mtOrder.Lots : -mtOrder.Lots;
 					order.Instrument = mtOrder.Symbol;
 					order.PT = mtOrder.TakeProfit;
 					order.SL = mtOrder.StopLoss;
