@@ -108,7 +108,7 @@
             textBoxSlDistance.Margin = new Padding(4, 5, 4, 5);
             textBoxSlDistance.Name = "textBoxSlDistance";
             textBoxSlDistance.Size = new Size(157, 39);
-            textBoxSlDistance.TabIndex = 1;
+            textBoxSlDistance.TabIndex = 3;
             // 
             // LabelPositionSize
             // 
@@ -117,7 +117,7 @@
             LabelPositionSize.Margin = new Padding(4, 0, 4, 0);
             LabelPositionSize.Name = "LabelPositionSize";
             LabelPositionSize.Size = new Size(133, 32);
-            LabelPositionSize.TabIndex = 0;
+            LabelPositionSize.TabIndex = 2;
             LabelPositionSize.Text = "&SL distance";
             // 
             // buttonSlUp
@@ -418,7 +418,7 @@
             labelPrice.Margin = new Padding(4, 0, 4, 0);
             labelPrice.Name = "labelPrice";
             labelPrice.Size = new Size(65, 32);
-            labelPrice.TabIndex = 2;
+            labelPrice.TabIndex = 0;
             labelPrice.Text = "&Price";
             // 
             // textBoxPrice
@@ -427,7 +427,7 @@
             textBoxPrice.Margin = new Padding(4, 5, 4, 5);
             textBoxPrice.Name = "textBoxPrice";
             textBoxPrice.Size = new Size(157, 39);
-            textBoxPrice.TabIndex = 3;
+            textBoxPrice.TabIndex = 1;
             // 
             // checkBoxPendingOrder
             // 

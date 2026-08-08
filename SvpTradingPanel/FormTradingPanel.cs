@@ -943,6 +943,16 @@ namespace SvpTradingPanel
         private void checkBoxPendingOrder_CheckedChanged(object sender, EventArgs e)
         {
             textBoxPrice.Enabled = checkBoxPendingOrder.Checked;
+
+            // U pending orderu se zadava cena, u market orderu rovnou SL distance.
+            if (checkBoxPendingOrder.Checked)
+            {
+                textBoxPrice.Focus();
+            }
+            else
+            {
+                textBoxSlDistance.Focus();
+            }
         }
 
 		private void buttonSetTp1_Click(object sender, EventArgs e)
@@ -1082,6 +1092,9 @@ namespace SvpTradingPanel
             timerRefreshLabels.Interval = 1000;
 
             checkBoxAutoCloseTrades.Checked = false;
+
+            // Bez pending orderu se zadava jako prvni SL distance.
+            this.ActiveControl = textBoxSlDistance;
 
             //string currency = MetatraderInstance.Instance.AccountCurrency();
             //this.Text = "SvpTradingPanel: "
