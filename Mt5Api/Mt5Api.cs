@@ -20,6 +20,22 @@ namespace Mt5Api
 	{
 		private readonly MtApi5Client apiClient = new MtApi5Client();
 
+		// Bitove priznaky vlastnosti SYMBOL_FILLING_MODE (ENUM_SYMBOL_FILLING_MODE v MQL5).
+		private const uint SYMBOL_FILLING_FOK = 1;
+		private const uint SYMBOL_FILLING_IOC = 2;
+		// Broker nepodporuje pozadovany rezim vyplneni.
+		private const uint TRADE_RETCODE_INVALID_FILL = 10030;
+
+		// Poradi, v jakem se rezimy vyplneni zkousi, kdyz je broker nehlasi.
+		private static readonly ENUM_ORDER_TYPE_FILLING[] fallbackFillingModes =
+		{
+			ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC,
+			ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_FOK,
+			ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_RETURN
+		};
+
+		private readonly Dictionary<string, List<ENUM_ORDER_TYPE_FILLING>> fillingModesCache = new Dictionary<string, List<ENUM_ORDER_TYPE_FILLING>>();
+
 		public static ISvpMt? Instance { get; set; }
 
 		private bool Connected { get; set; }
@@ -201,7 +217,6 @@ namespace Mt5Api
 			mqlTradeRequest.Tp = order.PT;
 			mqlTradeRequest.Price = order.OpenPrice;
 			mqlTradeRequest.Comment = order.Comment;
-			//mqlTradeRequest.Type_filling = ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC;
 			MqlTradeResult mqlTradeResult;
 			bool result = apiClient.OrderSend(mqlTradeRequest, out mqlTradeResult);
 			//apiClient.PositionModify((ulong)order.Id, order.SL, order.PT);
@@ -261,7 +276,6 @@ namespace Mt5Api
 			mqlTradeRequest.Sl = order.SL;
 			mqlTradeRequest.Tp = order.PT;
 			mqlTradeRequest.Comment = order.Comment;
-			//mqlTradeRequest.Type_filling = ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC;
 			MqlTradeResult mqlTradeResult;
 			bool result = apiClient.OrderSend(mqlTradeRequest, out mqlTradeResult);
 			//apiClient.PositionModify((ulong)order.Id, order.SL, order.PT);
@@ -586,6 +600,83 @@ namespace Mt5Api
 			return result.ticket;
 		}
 
+		/// <summary>
+		/// Rezimy vyplneni, ktere broker pro dany symbol dovoluje u market prikazu, serazene podle preference.
+		/// Kazdy broker (a i jednotlivy symbol) povoluje jinou kombinaci, proto se to musi zjistit ze symbolu
+		/// a ne natvrdo nastavovat, jinak konci prikazy chybou "Unsupported filling mode".
+		/// </summary>
+		private List<ENUM_ORDER_TYPE_FILLING> GetMarketFillingModes(string symbol)
+		{
+			if (fillingModesCache.TryGetValue(symbol, out List<ENUM_ORDER_TYPE_FILLING> cached))
+			{
+				return cached;
+			}
+
+			uint fillingMask = 0;
+			try
+			{
+				fillingMask = (uint)apiClient.SymbolInfoInteger(symbol, ENUM_SYMBOL_INFO_INTEGER.SYMBOL_FILLING_MODE);
+			}
+			catch (Exception e)
+			{
+				Logger.WriteLineError("Nepodarilo se zjistit rezimy vyplneni pro " + symbol + ": " + e.Message);
+			}
+
+			List<ENUM_ORDER_TYPE_FILLING> modes = new List<ENUM_ORDER_TYPE_FILLING>();
+			// IOC prvni, aby se prikaz vyplnil aspon castecne, kdyz neni cely objem k dispozici.
+			if ((fillingMask & SYMBOL_FILLING_IOC) != 0)
+			{
+				modes.Add(ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC);
+			}
+			if ((fillingMask & SYMBOL_FILLING_FOK) != 0)
+			{
+				modes.Add(ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_FOK);
+			}
+			if (modes.Count == 0)
+			{
+				// Broker masku nehlasi, zkusime rezimy postupne.
+				modes.AddRange(fallbackFillingModes);
+			}
+
+			fillingModesCache[symbol] = modes;
+			return modes;
+		}
+
+		/// <summary>
+		/// Odesle market prikaz a pri chybe "Unsupported filling mode" zkusi dalsi rezim vyplneni.
+		/// </summary>
+		private (bool result, ulong ticket, uint retCode, string comment) SendMarketOrder(MqlTradeRequest mqlTradeRequest)
+		{
+			List<ENUM_ORDER_TYPE_FILLING> modes = GetMarketFillingModes(mqlTradeRequest.Symbol);
+			MqlTradeResult mqlTradeResult = null;
+			bool result = false;
+			int rejected = 0;
+
+			foreach (ENUM_ORDER_TYPE_FILLING mode in modes)
+			{
+				mqlTradeRequest.Type_filling = mode;
+				result = apiClient.OrderSend(mqlTradeRequest, out mqlTradeResult);
+				if (result || mqlTradeResult == null || mqlTradeResult.Retcode != TRADE_RETCODE_INVALID_FILL)
+				{
+					break;
+				}
+				rejected++;
+			}
+
+			if (rejected > 0)
+			{
+				Logger.WriteLineError("Symbol " + mqlTradeRequest.Symbol + " nepodporuje rezim vyplneni "
+					+ string.Join(", ", modes.GetRange(0, rejected)) + ".");
+				if (result)
+				{
+					// Odmitnute rezimy uz priste nezkousime.
+					fillingModesCache[mqlTradeRequest.Symbol] = modes.GetRange(rejected, modes.Count - rejected);
+				}
+			}
+
+			return (result, mqlTradeResult?.Order ?? 0, mqlTradeResult?.Retcode ?? 0, mqlTradeResult?.Comment);
+		}
+
 		public ulong CreateMarketOrderSlPt(double units, double Sl, double Pt)
 		{
 			MqlTradeRequest mqlTradeRequest = new MqlTradeRequest();
@@ -594,14 +685,10 @@ namespace Mt5Api
 			mqlTradeRequest.Volume = Math.Abs(units);
 			mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY : ENUM_ORDER_TYPE.ORDER_TYPE_SELL;
 			mqlTradeRequest.Magic = Utilities.StrategyNumber;
-			// Todle zde musi byt kvuli ICMARKETS, jinak objednavky nechodi
-			mqlTradeRequest.Type_filling = ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC;
 			mqlTradeRequest.Comment = Utilities.StrategyName;
 			mqlTradeRequest.Sl = Sl;
 			mqlTradeRequest.Tp = Pt;
-			MqlTradeResult mqlTradeResult;
-			bool result = apiClient.OrderSend(mqlTradeRequest, out mqlTradeResult);
-			return mqlTradeResult.Order;
+			return SendMarketOrder(mqlTradeRequest).ticket;
 		}
 
 		public (bool result, ulong ticket, uint retCode, string comment) CreateMarketOrder(string instrument, double units, ulong magic, string comment)
@@ -612,12 +699,8 @@ namespace Mt5Api
 			mqlTradeRequest.Volume = Math.Abs(units);
 			mqlTradeRequest.Type = units > 0 ? ENUM_ORDER_TYPE.ORDER_TYPE_BUY : ENUM_ORDER_TYPE.ORDER_TYPE_SELL;
 			mqlTradeRequest.Magic = magic;
-			// Todle zde musi byt kvuli ICMARKETS, jinak objednavky nechodi
-			mqlTradeRequest.Type_filling = ENUM_ORDER_TYPE_FILLING.ORDER_FILLING_IOC;
 			mqlTradeRequest.Comment = comment;
-			MqlTradeResult mqlTradeResult;
-			bool result = apiClient.OrderSend(mqlTradeRequest, out mqlTradeResult);
-			return (result, mqlTradeResult.Order, mqlTradeResult.Retcode, mqlTradeResult.Comment);
+			return SendMarketOrder(mqlTradeRequest);
 		}
 
 		private DateTime ConvertMscTimeToDateTime(long time)
